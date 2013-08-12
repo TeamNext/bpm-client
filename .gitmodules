@@ -1,0 +1,3 @@
+[submodule "bpm.py"]
+	path = bpm.py
+	url = git@github.com:smelt/bpm.py.git
