@@ -1,0 +1,4 @@
+from shared_settings import *
+DATABASES['default']['USER'] = 'root'
+DATABASES['default']['PASSWORD'] = 'root'
+RQ_QUEUES['default']['PASSWORD'] = ''

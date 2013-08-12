@@ -1,0 +1,11 @@
+django
+django-rq
+django-supervisor
+MySQL-python
+south
+requests
+RestrictedPython
+mercurial
+croniter
+rq-dashboard
+rq-scheduler
