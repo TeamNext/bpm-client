@@ -26,7 +26,7 @@ var _fc_data = [
 //		data source: flowchart api
 //  2) generate task box div
 //  3) jsplumb connect boxes
-function gen_static_flowchart(task_name, $chart_container){
+function gen_static_flowchart(task_name, $chart_container, on_done){
 	var _fc_html = $('<div style="width: ' + _fc_width + 'px">')
 	//ajax request
     $.ajax({
@@ -111,6 +111,10 @@ function gen_static_flowchart(task_name, $chart_container){
                     })  
                 })
 
+                if (on_done) {
+                    on_done();
+                }
+
             });
 
             
@@ -118,6 +122,15 @@ function gen_static_flowchart(task_name, $chart_container){
     });
 }
 
+
+function get_task_trace(task_id, success) {
+    $.ajax({
+        url: '/v1/task/' + task_id + '/trace/',
+        type: 'GET',
+        dataType: 'json',
+        success: success
+    });
+}
 
 //render status of each task onto the static flowchart
 //find boxes by name

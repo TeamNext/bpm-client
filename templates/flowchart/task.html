@@ -1,0 +1,30 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+    <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js'></script>
+    <script type='text/javascript' src='http://jsplumbtoolkit.com/js/jquery.ui.touch-punch.min.js'></script>
+    <script type='text/javascript' src='http://jsplumbtoolkit.com/js/jquery.jsPlumb-1.4.1-all-min.js'></script>
+
+    <script type='text/javascript' src='/static/auto_flow.js?v=0.1'></script>
+</head>
+<body>
+<div id='flowchart'></div>
+
+<script type="text/javascript">
+    get_task_trace('{{ task_id }}', function (task_trace) {
+        gen_static_flowchart(task_trace.name, $('#flowchart'), function () {
+            $(task_trace.tasks).each(function (i, task) {
+                if ('SUCCESS' == task.state) {
+                    $('#_fc_step_' + task.step_name).css('background-color', 'lightgreen');
+                } else if ('FAILURE' == task.state) {
+                    $('#_fc_step_' + task.step_name).css('background-color', 'FireBrick');
+                } else if ('RUNNING' == task.state || 'READY' == task.state) {
+                    $('#_fc_step_' + task.step_name).css('background-color', 'yellow');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
