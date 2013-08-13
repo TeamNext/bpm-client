@@ -197,7 +197,20 @@ LOGGING = {
 }
 
 USE_TZ=True
-REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
+RUN_MODE = 'DEVELOP'    # DEVELOP TEST PRODUCT
+WSGI_ENV = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+if WSGI_ENV.endswith("production"):
+    RUN_MODE = "PRODUCT"
+elif WSGI_ENV.endswith("testing"):
+    RUN_MODE = "TEST"
+else:
+    RUN_MODE = "DEVELOP"
+if RUN_MODE=='DEVELOP':
+    REPO_TYPE = 'fs'
+    REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo', 'package')
+else:
+    REPO_TYPE='hg'
+    REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
 RQ_QUEUES = {
     'default': {
         'HOST': 'localhost',
