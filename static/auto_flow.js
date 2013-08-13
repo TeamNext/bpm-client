@@ -132,9 +132,27 @@ function get_task_trace(task_id, success) {
     });
 }
 
-//render status of each task onto the static flowchart
-//find boxes by name
-//data source: trace api
-function render_state(){
+function render_state(task_id) {
+    get_task_trace(task_id, function (task_trace) {
+        $(task_trace.tasks).each(function (i, task) {
+            if ('SUCCESS' == task.state) {
+                $('#_fc_step_' + task.step_name).css('background-color', 'lightgreen');
+            } else if ('FAILURE' == task.state) {
+                $('#_fc_step_' + task.step_name).css('background-color', 'FireBrick');
+            } else if ('RUNNING' == task.state || 'READY' == task.state || 'BLOCKED' == task.state) {
+                $('#_fc_step_' + task.step_name).css('background-color', 'yellow');
+            }
+        });
+    });
+}
 
+function gen_dynamic_flowchart(task_id, $chart_container) {
+    get_task_trace(task_id, function (task_trace) {
+        gen_static_flowchart(task_trace.name, $chart_container, function () {
+            render_state(task_id);
+            setInterval(function() {
+                render_state(task_id);
+            }, 1000);
+        });
+    });
 }
