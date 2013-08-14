@@ -43,7 +43,7 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
                     var _step_html = $('<div class="task">')
                                 .attr('id', '_fc_step_' + _step.name)
                                 .attr('style', 'width:' + _fc_width/_stage.length + 'px')
-                                .html(_step.description)
+                                .html('<div>' + _step.description + '</div><div class="task-details"></div>')
                     _stage_html.append(_step_html)
                 })  
 
@@ -135,12 +135,14 @@ function get_task_trace(task_id, success) {
 function render_state(task_id) {
     get_task_trace(task_id, function (task_trace) {
         $(task_trace.tasks).each(function (i, task) {
+            var step_div = $('#_fc_step_' + task.step_name);
+            step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
             if ('SUCCESS' == task.state) {
-                $('#_fc_step_' + task.step_name).css('background-color', 'lightgreen');
+                step_div.css('background-color', 'lightgreen');
             } else if ('FAILURE' == task.state) {
-                $('#_fc_step_' + task.step_name).css('background-color', 'FireBrick');
+                step_div.css('background-color', 'FireBrick');
             } else if ('RUNNING' == task.state || 'READY' == task.state || 'BLOCKED' == task.state) {
-                $('#_fc_step_' + task.step_name).css('background-color', 'yellow');
+                step_div.css('background-color', 'yellow');
             }
         });
     });
