@@ -47,7 +47,6 @@ function gen_static_flowchart(task_name, $chart_container, on_done) {
                             '<div class="task-op"></div>' +
                             '<div class="task-details"></div>')
                     if ('PROCESS' != _step.type) {
-                        _step_html.find('.task-op').hide();
                         _step_html.find('.task-details').hide();
                     }
                     _stage_html.append(_step_html)
@@ -164,7 +163,11 @@ function _render_state(task_trace) {
             step_div.find('.task-op').html('');
         } else if ('FAILURE' == task.summary_state) {
             step_div.css('background-color', 'FireBrick');
-            step_div.find('.task-op').html('');
+            var $ele = $('<button class="retry">重试</button>');
+            $ele.data('taskId', task.id);
+            $ele.attr('data-args', task.exec_args);
+            $ele.attr('data-kwargs', task.exec_kwargs);
+            step_div.find('.task-op').html($ele);
         } else if ('RUNNING' == task.summary_state) {
             step_div.css('background-color', 'yellow');
             step_div.find('.task-op').html('<button class="pause" data-task-id="' + task.id + '">暂停</button>');
@@ -229,6 +232,32 @@ function gen_dynamic_flowchart(task_id, $chart_container) {
         $chart_container.on('click', '.revoke', function(event) {
             revoke_task($(event.target).data('taskId'), function() {
                 alert('撤销请求预约成功，会在当前任务执行完之后撤销');
+            });
+        });
+        $chart_container.on('click', '.retry', function(event) {
+            var task_id = $(event.target).data('taskId');
+            var args = $(event.target).attr('data-args');
+            var kwargs = $(event.target).attr('data-kwargs');
+            var $form = $('<form><div>args：<textarea name="args">' + args + '</textarea></div>' +
+                '<div>kwargs：<textarea name="kwargs">' + kwargs + '</textarea></div>' +
+                '<button>重试</button></form>');
+            $form.submit(function() {
+                $.ajax({
+                    url: '/v1/task/' + task_id + '/tries/',
+                    type: 'POST',
+                    data: {
+                        exec_args: $form.find('[name=args]').val(),
+                        exec_kwargs: $form.find('[name=kwargs]').val()
+                    },
+                    success: function() {
+                        $form.dialog('close');
+                    }
+                });
+                return false;
+            });
+            $form.dialog({
+                title: '重试任务',
+                width: 600
             });
         });
         _render_state(task_trace);
