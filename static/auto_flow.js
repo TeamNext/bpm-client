@@ -134,28 +134,56 @@ function get_task_trace(task_id, success) {
 
 function render_state(task_id) {
     get_task_trace(task_id, function (task_trace) {
-        $(task_trace.tasks).each(function (i, task) {
-            var step_div = $('#_fc_step_' + task.step_name);
+        _render_state(task_trace);
+    });
+}
+
+function _render_state(task_trace) {
+    if ('SUSPENDED' == task_trace.state) {
+        var op_div = '<button class="resume">继续</button>';
+    } else {
+        var op_div = '<button class="pause">暂停</button>';
+    }
+    $('.root-task-state').html('状态: ' + task_trace.state + op_div);
+    $(task_trace.tasks).each(function (i, task) {
+        var step_div = $('#_fc_step_' + task.step_name);
 //            step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
-            console.log(task.summary_state);
-            if ('SUCCESS' == task.summary_state) {
-                step_div.css('background-color', 'lightgreen');
-            } else if ('FAILURE' == task.summary_state) {
-                step_div.css('background-color', 'FireBrick');
-            } else if ('RUNNING' == task.summary_state) {
-                step_div.css('background-color', 'yellow');
-            }
-        });
-        $(task_trace.free_steps).each(function (i, free_step) {
-            var step_div = $('#_fc_step_' + free_step.step_name);
-            if ('SUCCESS' == free_step.summary_state) {
-                step_div.css('background-color', 'lightgreen');
-            } else if ('FAILURE' == free_step.summary_state) {
-                step_div.css('background-color', 'FireBrick');
-            } else if ('RUNNING' == free_step.summary_state) {
-                step_div.css('background-color', 'yellow');
-            }
-        });
+        console.log(task.summary_state);
+        if ('SUCCESS' == task.summary_state) {
+            step_div.css('background-color', 'lightgreen');
+        } else if ('FAILURE' == task.summary_state) {
+            step_div.css('background-color', 'FireBrick');
+        } else if ('RUNNING' == task.summary_state) {
+            step_div.css('background-color', 'yellow');
+        }
+    });
+    $(task_trace.free_steps).each(function (i, free_step) {
+        var step_div = $('#_fc_step_' + free_step.step_name);
+        if ('SUCCESS' == free_step.summary_state) {
+            step_div.css('background-color', 'lightgreen');
+        } else if ('FAILURE' == free_step.summary_state) {
+            step_div.css('background-color', 'FireBrick');
+        } else if ('RUNNING' == free_step.summary_state) {
+            step_div.css('background-color', 'yellow');
+        }
+    });
+}
+
+function pause_task(task_id, success) {
+    $.ajax({
+        url: '/v1/task/' + task_id + '/appointments/to-suspended/',
+        type: 'POST',
+        dataType: 'json',
+        success: success
+    });
+}
+
+function resume_task(task_id, success) {
+    $.ajax({
+        url: '/v1/task/' + task_id + '/transitions/to-ready/',
+        type: 'POST',
+        dataType: 'json',
+        success: success
     });
 }
 
@@ -163,10 +191,19 @@ function gen_dynamic_flowchart(task_id, $chart_container) {
     get_task_trace(task_id, function (task_trace) {
         $chart_container.append(
             '<div>任务名: ' + task_trace.name + '</div>' +
-            '<div>状态: ' + task_trace.state + '<button>暂停</button></div>' +
+            '<div class="root-task-state"/>' +
                 '<div class="flowchart"></div>');
+        $chart_container.on('click', '.pause', function() {
+            pause_task(task_id, function() {
+                alert('暂停请求预约成功，会在当前任务执行完之后暂停');
+            });
+        });
+        $chart_container.on('click', '.resume', function() {
+            resume_task(task_id);
+        });
+        _render_state(task_trace);
         gen_static_flowchart(task_trace.name, $chart_container.find('.flowchart'), function () {
-            render_state(task_id);
+            _render_state(task_trace);
             setInterval(function () {
                 render_state(task_id);
             }, 1000);
