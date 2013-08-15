@@ -7,45 +7,45 @@ var _fc_style = "<style>.stage {margin-bottom: 8px;}\
 var _fc_width = 320; //total width for flowchart
 
 /* example data
-var _fc_data = [
-		[
-			{description:"ABC", name:1, predecessors:[]}
-		], //stage1
-		[
-			{description:"DEF", name:2, predecessors:[1]},
-			{description:"GHI", name:3, predecessors:[1]}
-		], //stage2
-		[
-			{description:"JKL", name:4, predecessors:[2,3]}
-		], //stage3
-	]
-*/
+ var _fc_data = [
+ [
+ {description:"ABC", name:1, predecessors:[]}
+ ], //stage1
+ [
+ {description:"DEF", name:2, predecessors:[1]},
+ {description:"GHI", name:3, predecessors:[1]}
+ ], //stage2
+ [
+ {description:"JKL", name:4, predecessors:[2,3]}
+ ], //stage3
+ ]
+ */
 
 //generate a static flowchart, according to flowchart json
 //	1) get data
 //		data source: flowchart api
 //  2) generate task box div
 //  3) jsplumb connect boxes
-function gen_static_flowchart(task_name, $chart_container, on_done){
-	var _fc_html = $('<div style="width: ' + _fc_width + 'px">')
-	//ajax request
+function gen_static_flowchart(task_name, $chart_container, on_done) {
+    var _fc_html = $('<div style="width: ' + _fc_width + 'px">')
+    //ajax request
     $.ajax({
         url: '/v1/flowcharts/' + task_name + '/',
         type: 'GET',
         dataType: 'json',
         //data:
-        success: function(_fc_data){
+        success: function (_fc_data) {
             //draw stages
-            $.each(_fc_data, function(_stage_idx, _stage){
+            $.each(_fc_data, function (_stage_idx, _stage) {
                 var _stage_html = $('<div class="stage">')
                 //draw steps
-                $.each(_stage, function(_step_idx, _step){
+                $.each(_stage, function (_step_idx, _step) {
                     var _step_html = $('<div class="task">')
-                                .attr('id', '_fc_step_' + _step.name)
-                                .attr('style', 'width:' + _fc_width/_stage.length + 'px')
-                                .html('<div>' + _step.type + ': ' + _step.description + '</div><div class="task-details"></div>')
+                        .attr('id', '_fc_step_' + _step.name)
+                        .attr('style', 'width:' + _fc_width / _stage.length + 'px')
+                        .html('<div>' + _step.type + ': ' + _step.description + '</div><div class="task-details"></div>')
                     _stage_html.append(_step_html)
-                })  
+                })
 
                 _fc_html.append(_stage_html)
             })
@@ -55,15 +55,15 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
 
             jsPlumb.ready(function () {
                 jsPlumb.importDefaults({
-        //              // default to blue at one end and green at the other
-        //              EndpointStyles : [{ fillStyle:'#225588' }, { fillStyle:'#558822' }],
-        //              // blue endpoints 7 px; green endpoints 11.
-        //              Endpoints : [ [ "Dot", {radius:7} ], [ "Dot", { radius:11 } ]],
+                    //              // default to blue at one end and green at the other
+                    //              EndpointStyles : [{ fillStyle:'#225588' }, { fillStyle:'#558822' }],
+                    //              // blue endpoints 7 px; green endpoints 11.
+                    //              Endpoints : [ [ "Dot", {radius:7} ], [ "Dot", { radius:11 } ]],
                     // the overlays to decorate each connection with.  note that the label overlay uses a function to generate the label text; in this
                     // case it returns the 'labelText' member that we set on each connection in the 'init' method below.
-        //              ConnectionOverlays : [
-        //                  [ "Arrow", { location: 0, width:12, height:8} ]
-        //              ]
+                    //              ConnectionOverlays : [
+                    //                  [ "Arrow", { location: 0, width:12, height:8} ]
+                    //              ]
                 });
 
                 var connectorPaintStyle = {
@@ -83,15 +83,15 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
                     isSource: true,
                     connector: [ "Flowchart", { stub: [0, 0], gap: 0, cornerRadius: 40, alwaysRespectStubs: true } ],
                     connectorStyle: connectorPaintStyle
-        //              hoverPaintStyle:endpointHoverStyle,
-        //              connectorHoverStyle:connectorHoverStyle,
+                    //              hoverPaintStyle:endpointHoverStyle,
+                    //              connectorHoverStyle:connectorHoverStyle,
                 };
                 var targetEndpoint = {
                     endpoint: ['Image', {src: '/static/down_arrow.png', hoverClass: 'hover-endpoint', width: 16, height: 16}],
                     paintStyle: {
                         fillStyle: "blue"
                     },
-        //              hoverPaintStyle:endpointHoverStyle,
+                    //              hoverPaintStyle:endpointHoverStyle,
                     dropOptions: { hoverClass: "hover", activeClass: "active" },
                     isTarget: true
                 };
@@ -103,12 +103,12 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
                 }
 
 
-                $.each(_fc_data, function(_stage_idx, _stage){
-                    $.each(_stage, function(_step_idx, _step){
-                        $.each(_step.predecessors, function(_pre_idx, _pre){
+                $.each(_fc_data, function (_stage_idx, _stage) {
+                    $.each(_stage, function (_step_idx, _step) {
+                        $.each(_step.predecessors, function (_pre_idx, _pre) {
                             connect($('#_fc_step_' + _pre), $('#_fc_step_' + _step.name))
                         })
-                    })  
+                    })
                 })
 
                 if (on_done) {
@@ -117,7 +117,7 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
 
             });
 
-            
+
         }
     });
 }
@@ -161,9 +161,13 @@ function render_state(task_id) {
 
 function gen_dynamic_flowchart(task_id, $chart_container) {
     get_task_trace(task_id, function (task_trace) {
-        gen_static_flowchart(task_trace.name, $chart_container, function () {
+        $chart_container.append(
+            '<div>任务名: ' + task_trace.name + '</div>' +
+            '<div>状态: ' + task_trace.state + '<button>暂停</button></div>' +
+                '<div class="flowchart"></div>');
+        gen_static_flowchart(task_trace.name, $chart_container.find('.flowchart'), function () {
             render_state(task_id);
-            setInterval(function() {
+            setInterval(function () {
                 render_state(task_id);
             }, 1000);
         });
