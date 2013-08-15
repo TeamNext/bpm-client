@@ -43,7 +43,13 @@ function gen_static_flowchart(task_name, $chart_container, on_done) {
                     var _step_html = $('<div class="task">')
                         .attr('id', '_fc_step_' + _step.name)
                         .attr('style', 'width:' + _fc_width / _stage.length + 'px')
-                        .html('<div>' + _step.type + ': ' + _step.description + '</div><div class="task-details"></div>')
+                        .html('<div>' + _step.type + ': ' + _step.description + '</div>' +
+                            '<div class="task-op"></div>' +
+                            '<div class="task-details"></div>')
+                    if ('PROCESS' != _step.type) {
+                        _step_html.find('.task-op').hide();
+                        _step_html.find('.task-details').hide();
+                    }
                     _stage_html.append(_step_html)
                 })
 
@@ -140,21 +146,27 @@ function render_state(task_id) {
 
 function _render_state(task_trace) {
     if ('SUSPENDED' == task_trace.state) {
-        var op_div = '<button class="resume">继续</button>';
+        var op_div = '<button class="resume" data-task-id="' + task_trace.id + '">继续</button>';
     } else {
-        var op_div = '<button class="pause">暂停</button>';
+        var op_div = '<button class="pause" data-task-id="' + task_trace.id + '">暂停</button>';
     }
     $('.root-task-state').html('状态: ' + task_trace.state + op_div);
     $(task_trace.tasks).each(function (i, task) {
         var step_div = $('#_fc_step_' + task.step_name);
-//            step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
+        step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
         console.log(task.summary_state);
         if ('SUCCESS' == task.summary_state) {
             step_div.css('background-color', 'lightgreen');
+            step_div.find('.task-op').html('');
         } else if ('FAILURE' == task.summary_state) {
             step_div.css('background-color', 'FireBrick');
+            step_div.find('.task-op').html('');
         } else if ('RUNNING' == task.summary_state) {
             step_div.css('background-color', 'yellow');
+            step_div.find('.task-op').html('<button class="pause" data-task-id="' + task.id + '">暂停</button>');
+        } else if ('SUSPENDED' == task.summary_state) {
+            step_div.css('background-color', 'purple');
+            step_div.find('.task-op').html('<button class="resume" data-task-id="' + task.id + '">继续</button>');
         }
     });
     $(task_trace.free_steps).each(function (i, free_step) {
@@ -193,13 +205,13 @@ function gen_dynamic_flowchart(task_id, $chart_container) {
             '<div>任务名: ' + task_trace.name + '</div>' +
             '<div class="root-task-state"/>' +
                 '<div class="flowchart"></div>');
-        $chart_container.on('click', '.pause', function() {
-            pause_task(task_id, function() {
+        $chart_container.on('click', '.pause', function(event) {
+            pause_task($(event.target).data('taskId'), function() {
                 alert('暂停请求预约成功，会在当前任务执行完之后暂停');
             });
         });
-        $chart_container.on('click', '.resume', function() {
-            resume_task(task_id);
+        $chart_container.on('click', '.resume', function(event) {
+            resume_task($(event.target).data('taskId'));
         });
         _render_state(task_trace);
         gen_static_flowchart(task_trace.name, $chart_container.find('.flowchart'), function () {
