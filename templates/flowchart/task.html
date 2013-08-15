@@ -9,6 +9,9 @@
     <script type='text/javascript' src='/static/auto_flow.js?v=0.1'></script>
 </head>
 <body>
+<form method="POST" action="/v1/task/{{ task_id }}/appointments/to-suspended/">
+    <button>暂停</button>
+</form>
 <div id='flowchart'></div>
 
 <script type="text/javascript">
