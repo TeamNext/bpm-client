@@ -136,12 +136,23 @@ function render_state(task_id) {
     get_task_trace(task_id, function (task_trace) {
         $(task_trace.tasks).each(function (i, task) {
             var step_div = $('#_fc_step_' + task.step_name);
-            step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
-            if ('SUCCESS' == task.state) {
+//            step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
+            console.log(task.summary_state);
+            if ('SUCCESS' == task.summary_state) {
                 step_div.css('background-color', 'lightgreen');
-            } else if ('FAILURE' == task.state) {
+            } else if ('FAILURE' == task.summary_state) {
                 step_div.css('background-color', 'FireBrick');
-            } else if ('RUNNING' == task.state || 'READY' == task.state || 'BLOCKED' == task.state) {
+            } else if ('RUNNING' == task.summary_state) {
+                step_div.css('background-color', 'yellow');
+            }
+        });
+        $(task_trace.free_steps).each(function (i, free_step) {
+            var step_div = $('#_fc_step_' + free_step.step_name);
+            if ('SUCCESS' == free_step.summary_state) {
+                step_div.css('background-color', 'lightgreen');
+            } else if ('FAILURE' == free_step.summary_state) {
+                step_div.css('background-color', 'FireBrick');
+            } else if ('RUNNING' == free_step.summary_state) {
                 step_div.css('background-color', 'yellow');
             }
         });
