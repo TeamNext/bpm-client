@@ -145,16 +145,19 @@ function render_state(task_id) {
 }
 
 function _render_state(task_trace) {
+    var revoke_op_div = '<button class="revoke" data-task-id="' + task_trace.id + '">撤销</button>';
     if ('SUSPENDED' == task_trace.state) {
         var op_div = '<button class="resume" data-task-id="' + task_trace.id + '">继续</button>';
     } else {
         var op_div = '<button class="pause" data-task-id="' + task_trace.id + '">暂停</button>';
     }
+    if ('REVOKED' != task_trace.state || 'FAILURE' != task_trace.state || 'SUCCESS' != task_trace.state) {
+        op_div += revoke_op_div;
+    }
     $('.root-task-state').html('状态: ' + task_trace.state + op_div);
     $(task_trace.tasks).each(function (i, task) {
         var step_div = $('#_fc_step_' + task.step_name);
         step_div.find('.task-details').html('<a href="/flowchart/task/' + task.id + '/">Details</a>');
-        console.log(task.summary_state);
         if ('SUCCESS' == task.summary_state) {
             step_div.css('background-color', 'lightgreen');
             step_div.find('.task-op').html('');
@@ -190,6 +193,15 @@ function pause_task(task_id, success) {
     });
 }
 
+function revoke_task(task_id, success) {
+    $.ajax({
+        url: '/v1/task/' + task_id + '/appointments/to-revoked/',
+        type: 'POST',
+        dataType: 'json',
+        success: success
+    });
+}
+
 function resume_task(task_id, success) {
     $.ajax({
         url: '/v1/task/' + task_id + '/transitions/to-ready/',
@@ -212,6 +224,11 @@ function gen_dynamic_flowchart(task_id, $chart_container) {
         });
         $chart_container.on('click', '.resume', function(event) {
             resume_task($(event.target).data('taskId'));
+        });
+        $chart_container.on('click', '.revoke', function(event) {
+            revoke_task($(event.target).data('taskId'), function() {
+                alert('撤销请求预约成功，会在当前任务执行完之后撤销');
+            });
         });
         _render_state(task_trace);
         gen_static_flowchart(task_trace.name, $chart_container.find('.flowchart'), function () {
