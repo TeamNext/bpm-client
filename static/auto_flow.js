@@ -43,7 +43,7 @@ function gen_static_flowchart(task_name, $chart_container, on_done){
                     var _step_html = $('<div class="task">')
                                 .attr('id', '_fc_step_' + _step.name)
                                 .attr('style', 'width:' + _fc_width/_stage.length + 'px')
-                                .html('<div>' + _step.description + '</div><div class="task-details"></div>')
+                                .html('<div>' + _step.type + ': ' + _step.description + '</div><div class="task-details"></div>')
                     _stage_html.append(_step_html)
                 })  
 
