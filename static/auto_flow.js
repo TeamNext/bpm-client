@@ -151,8 +151,9 @@ function _render_state(task_trace) {
     } else {
         var op_div = '<button class="pause" data-task-id="' + task_trace.id + '">暂停</button>';
     }
-    if ('REVOKED' != task_trace.state || 'FAILURE' != task_trace.state || 'SUCCESS' != task_trace.state) {
-        op_div += revoke_op_div;
+    op_div += revoke_op_div;
+    if ('REVOKED' == task_trace.state || 'FAILURE' == task_trace.state || 'SUCCESS' == task_trace.state) {
+        op_div = '';
     }
     $('.root-task-state').html('状态: ' + task_trace.state + op_div);
     $(task_trace.tasks).each(function (i, task) {
