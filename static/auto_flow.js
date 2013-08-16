@@ -163,11 +163,15 @@ function _render_state(task_trace) {
             step_div.find('.task-op').html('');
         } else if ('FAILURE' == task.summary_state) {
             step_div.css('background-color', 'FireBrick');
-            var $ele = $('<button class="retry">重试</button>');
-            $ele.data('taskId', task.id);
-            $ele.attr('data-args', task.exec_args);
-            $ele.attr('data-kwargs', task.exec_kwargs);
-            step_div.find('.task-op').html($ele);
+            if ('FAILURE' == task.state) {
+                var $ele = $('<button class="retry">重试</button>');
+                $ele.data('taskId', task.id);
+                $ele.attr('data-args', task.exec_args);
+                $ele.attr('data-kwargs', task.exec_kwargs);
+                step_div.find('.task-op').html($ele);
+            } else {
+                step_div.find('.task-op').html('');
+            }
         } else if ('RUNNING' == task.summary_state) {
             step_div.css('background-color', 'yellow');
             step_div.find('.task-op').html('<button class="pause" data-task-id="' + task.id + '">暂停</button>');
