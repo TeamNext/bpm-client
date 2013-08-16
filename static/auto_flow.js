@@ -221,8 +221,14 @@ function resume_task(task_id, success) {
 
 function gen_dynamic_flowchart(task_id, $chart_container) {
     get_task_trace(task_id, function (task_trace) {
+        var parent_task_div = '';
+        if (task_trace.parents) {
+            $(task_trace.parents).each(function(i, parent) {
+                parent_task_div += ' -> <a href="/flowchart/task/' + parent.id + '/">' + (parent.step_name||parent.name) + '</a> ';
+            });
+        }
         $chart_container.append(
-            '<div>任务名: ' + task_trace.name + '</div>' +
+            '<div>任务名: ' + task_trace.name + parent_task_div + '</div>' +
             '<div class="root-task-state"/>' +
                 '<div class="flowchart"></div>');
         $chart_container.on('click', '.pause', function(event) {
