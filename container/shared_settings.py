@@ -18,6 +18,7 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '3306',                      # Set to empty string for default.
+        'TEST_COLLATION': 'utf8_general_ci'
     }
 }
 
@@ -166,6 +167,13 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'simple',
+            'filename': os.path.join(PROJECT_ROOT, 'bpm.log'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5
+        },
     },
     'loggers': {
         'django.request': {
@@ -179,7 +187,7 @@ LOGGING = {
             'propagate': True,
         },
         'bpm.kernel.sandbox': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -207,10 +215,9 @@ else:
     RUN_MODE = "DEVELOP"
 if RUN_MODE=='DEVELOP':
     REPO_TYPE = 'fs'
-    REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo', 'package')
 else:
     REPO_TYPE='hg'
-    REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
+REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
 RQ_QUEUES = {
     'default': {
         'HOST': 'localhost',
