@@ -3,7 +3,9 @@ import httplib
 
 import requests
 import requests.packages.urllib3.util
+from django.conf import settings
 
+BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
 
 __all__ = ['list_tasks', 'create_task', 'get_default_flowchart']
 
@@ -47,6 +49,6 @@ def get_default_flowchart(task_class_name):
 def make_url_absolute(url):
     scheme, auth, host, port, path, query, fragment = requests.packages.urllib3.util.parse_url(url)
     if not scheme:
-        return 'http://127.0.0.1:7999%s' % url
+        return '%s%s' % (BPM_URL, url)
     else:
         return url
