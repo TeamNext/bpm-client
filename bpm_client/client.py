@@ -8,8 +8,15 @@ import requests.packages.urllib3.util
 __all__ = ['list_tasks', 'create_task', 'get_default_flowchart']
 
 
-def list_tasks(task_class_name):
-    url = make_url_absolute('/v1/tasks/%s/' % task_class_name)
+def list_tasks(task_class_name, date_created_ge=None, date_created_lt=None):
+    url = make_url_absolute('/v1/search/')
+    response = requests.post(url, data={
+        'searching_type': 'task',
+        'name_eq': task_class_name,
+        'date_created_ge': date_created_ge.strftime('%s.%f') if date_created_ge else '',
+        'date_created_lt': date_created_lt.strftime('%s.%f') if date_created_lt else ''
+    })
+    url = make_url_absolute(json.loads(response.content)['rel_tasks'])
     response = requests.get(url)
     assert httplib.OK == response.status_code
     return json.loads(response.content)['tasks']
@@ -30,7 +37,7 @@ def create_task(task_class_name, **exec_kwargs):
 
 def get_default_flowchart(task_class_name):
     url = make_url_absolute('/v1/search/')
-    response = requests.post(url, data={'type_eq': 'task-definition', 'name_eq': task_class_name})
+    response = requests.post(url, data={'searching_type': 'task-definition', 'name_eq': task_class_name})
     rel_default_flowchart = make_url_absolute(json.loads(response.content)['rel_default_flowchart'])
     response = requests.get(rel_default_flowchart)
     assert httplib.OK == response.status_code
