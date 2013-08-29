@@ -12,8 +12,6 @@ class SearchTaskTest(TestCase):
         apply_context(self, run_test_server())
         self.repo = InMemoryRepository()
         apply_context(self, mock_bpm_kernel(self.repo))
-
-    def test(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import AbstractComponent
 from bpm.logging import get_logger
@@ -25,6 +23,8 @@ class EmptyComponent(AbstractComponent):
         logger.debug('Component start')
         self.complete()
         """)
+
+    def test_search_by_date_created(self):
         task = Task.objects.get(pk=create_task('bpmtest.EmptyComponent')['id'])
         task.date_created = datetime(2008, 8, 8)
         task.save()
@@ -46,3 +46,14 @@ class EmptyComponent(AbstractComponent):
             date_created_ge=datetime(2008, 8, 8),
             date_created_lt=datetime(2008, 8, 10))
         self.assertEqual(2, len(tasks))
+
+    def test_search_by_context(self):
+        task = create_task('bpmtest.EmptyComponent')
+        self.assertEqual(1, len(list_tasks('bpmtest.EmptyComponent')))
+        self.assertEqual(0, len(list_tasks('bpmtest.EmptyComponent', context_eq={
+            'operator': 'wentao'
+        })))
+        set_task_context(task['id'], 'operator', 'wentao')
+        self.assertEqual(1, len(list_tasks('bpmtest.EmptyComponent', context_eq={
+            'operator': 'wentao'
+        })))
