@@ -54,6 +54,6 @@ class EmptyComponent(AbstractComponent):
             'operator': 'wentao'
         })))
         set_task_context(task['id'], 'operator', 'wentao')
-        self.assertEqual(1, len(list_tasks('bpmtest.EmptyComponent', context_eq={
+        self.assertEqual(1, len(list_tasks(context_eq={
             'operator': 'wentao'
         })))
