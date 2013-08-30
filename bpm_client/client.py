@@ -7,7 +7,7 @@ from django.conf import settings
 
 BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
 
-__all__ = ['list_tasks', 'create_task', 'get_default_flowchart', 'get_task', 'set_task_context']
+__all__ = ['list_tasks', 'create_task', 'get_default_flowchart', 'get_task', 'get_task_trace', 'set_task_context']
 
 
 def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context_eq=None):
@@ -68,6 +68,19 @@ def get_task(task_id):
     response = requests.post(url, data=args)
     assert httplib.OK == response.status_code
     url = make_url_absolute(json.loads(response.content)['rel_task'])
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+def get_task_trace(task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_task_trace'])
     response = requests.get(url)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
