@@ -8,7 +8,7 @@ from django.conf import settings
 BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
 
 __all__ = ['list_tasks', 'create_task', 'get_default_flowchart', 'get_task', 'get_task_trace',
-           'set_task_context', 'suspend_task']
+           'set_task_context', 'suspend_task', 'resume_task']
 
 
 def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context_eq=None):
@@ -108,6 +108,22 @@ def suspend_task(task_id):
     http_call = getattr(requests, form_suspend['method'].lower())
     body = form_suspend['body']
     url = make_url_absolute(form_suspend['action'])
+    response = http_call(url, data=body)
+    return json.loads(response.content)
+
+
+def resume_task(task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_resume = json.loads(response.content)['form_resume']
+    http_call = getattr(requests, form_resume['method'].lower())
+    body = form_resume['body']
+    url = make_url_absolute(form_resume['action'])
     response = http_call(url, data=body)
     return json.loads(response.content)
 
