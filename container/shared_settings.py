@@ -186,9 +186,19 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'bpm.kernel.sandbox': {
+        'bpm.kernel.jobs': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'bpm.kernel.executor': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'bpm.kernel.sandbox': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': False,
         },
         'rq': {
