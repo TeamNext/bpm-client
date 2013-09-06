@@ -153,7 +153,7 @@ LOGGING = {
     },
     'formatters': {
         'simple': {
-            'format': '%(levelname)s %(message)s \n'
+            'format': '%(process)d %(levelname)s %(message)s \n'
         },
     },
     'handlers': {

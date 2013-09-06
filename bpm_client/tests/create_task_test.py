@@ -14,16 +14,14 @@ class CreateTaskTest(TestCase):
 
     def test(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
-from bpm.kernel import AbstractComponent
+from bpm.kernel import *
 from bpm.logging import get_logger
 
 logger = get_logger()
 
-class EmptyComponent(AbstractComponent):
-    def start(self):
-        logger.debug('Component start')
-        self.complete()
+def empty_component():
+    pass
         """)
-        self.assertEqual([], list_tasks('bpmtest.EmptyComponent'))
-        create_task('bpmtest.EmptyComponent')
-        self.assertEqual(1, len(list_tasks('bpmtest.EmptyComponent')))
+        self.assertEqual([], list_tasks('bpmtest.empty_component'))
+        create_task('bpmtest.empty_component')
+        self.assertEqual(1, len(list_tasks('bpmtest.empty_component')))

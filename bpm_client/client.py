@@ -109,7 +109,7 @@ def suspend_task(task_id):
     body = form_suspend['body']
     url = make_url_absolute(form_suspend['action'])
     response = http_call(url, data=body)
-    return json.loads(response.content)
+    return response.content
 
 
 def resume_task(task_id):
@@ -125,7 +125,7 @@ def resume_task(task_id):
     body = form_resume['body']
     url = make_url_absolute(form_resume['action'])
     response = http_call(url, data=body)
-    return json.loads(response.content)
+    return response.content
 
 
 def revoke_task(task_id):
@@ -141,7 +141,7 @@ def revoke_task(task_id):
     body = form_revoke['body']
     url = make_url_absolute(form_revoke['action'])
     response = http_call(url, data=body)
-    return json.loads(response.content)
+    return response.content
 
 
 def retry_task(task_id, *exec_args, **exec_kwargs):
