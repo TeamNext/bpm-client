@@ -155,6 +155,9 @@ LOGGING = {
         'simple': {
             'format': '%(process)d %(levelname)s %(message)s \n'
         },
+        'bare': {
+            'format': '%(message)s'
+        }
     },
     'handlers': {
         'mail_admins': {
@@ -176,7 +179,7 @@ LOGGING = {
         },
         'sandbox': {
             'class': 'bpm.logging.BpmLogHandler',
-            'formatter': 'simple'
+            'formatter': 'bare'
         }
     },
     'loggers': {
@@ -196,12 +199,12 @@ LOGGING = {
             'propagate': True,
         },
         'bpm.kernel.jobs': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'sandbox'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'bpm.kernel.executor': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'sandbox'],
             'level': 'DEBUG',
             'propagate': False,
         },
