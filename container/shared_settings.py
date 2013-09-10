@@ -174,12 +174,21 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 10,
             'backupCount': 5
         },
+        'sandbox': {
+            'class': 'bpm.logging.BpmLogHandler',
+            'formatter': 'simple'
+        }
     },
     'loggers': {
         'django.request': {
             'handlers': ['console', 'mail_admins'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        '__sandbox__': {
+            'handlers': ['sandbox'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
         'bpm': {
             'handlers': ['console'],
@@ -233,6 +242,12 @@ RQ_QUEUES = {
         'HOST': 'localhost',
         'PORT': 6379,
         'DB': 0,
+        'PASSWORD': '',
+    },
+    'task-events': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 1,
         'PASSWORD': '',
     }
 }

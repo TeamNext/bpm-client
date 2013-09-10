@@ -15,9 +15,6 @@ class CreateTaskTest(TestCase):
     def test(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 def empty_component():
     pass

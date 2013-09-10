@@ -15,9 +15,6 @@ class GetFlowchartTest(TestCase):
     def test_one_step(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class EmptyComponent(AbstractComponent):
     def start(self, arg1=None):
@@ -36,9 +33,6 @@ class SerialProcess(AbstractProcess):
     def test_serial(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class EmptyComponent(AbstractComponent):
     def start(self, arg1=None):
@@ -69,9 +63,6 @@ class SerialProcess(AbstractProcess):
     def test_parallel(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class EmptyComponent(AbstractComponent):
     def start(self, arg1=None):
@@ -92,9 +83,6 @@ class SerialProcess(AbstractProcess):
     def test_join(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class EmptyComponent(AbstractComponent):
     def start(self, arg1=None):
@@ -115,9 +103,6 @@ class SerialProcess(AbstractProcess):
     def test_sort(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class EmptyComponent(AbstractComponent):
     def start(self, arg1=None):
@@ -144,9 +129,6 @@ class SerialProcess(AbstractProcess):
     def test_function(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 class SerialProcess(AbstractProcess):
     def steps(self):

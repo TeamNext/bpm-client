@@ -16,9 +16,6 @@ class WaitCallbackFromBkTest(TestCase):
     def test_wait_from_main(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 @task
 def call_bk_l2():
@@ -34,9 +31,6 @@ def call_bk_l2():
     def test_wait_from_step(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 @task
 def call_bk_l2():

@@ -15,9 +15,6 @@ class SuspendTaskTest(TestCase):
     def test(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
-from bpm.logging import get_logger
-
-logger = get_logger()
 
 @task
 def loop_forever():

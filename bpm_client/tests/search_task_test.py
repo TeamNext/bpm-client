@@ -13,14 +13,11 @@ class SearchTaskTest(TestCase):
         self.repo = InMemoryRepository()
         apply_context(self, mock_bpm_kernel(self.repo))
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
-from bpm.kernel import AbstractComponent
-from bpm.logging import get_logger
-
-logger = get_logger()
+from bpm.kernel import *
 
 class EmptyComponent(AbstractComponent):
     def start(self):
-        logger.debug('Component start')
+        bpm_logger.debug('Component start')
         self.complete()
         """)
 
