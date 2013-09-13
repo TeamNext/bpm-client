@@ -236,7 +236,7 @@ elif WSGI_ENV.endswith("testing"):
 else:
     RUN_MODE = "DEVELOP"
 if RUN_MODE=='DEVELOP':
-    REPO_TYPE = 'fs'
+    REPO_TYPE = 'hg'
 else:
     REPO_TYPE='hg'
 REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
