@@ -22,7 +22,7 @@ def serial_process():
     def some_step():
         pass
         """)
-        flowchart = get_default_flowchart('bpmtest.serial_process')
+        flowchart = get_task_definition_flowchart('bpmtest.serial_process')
         self.assertEqual(1, len(flowchart))
         stage1 = flowchart[0]
         self.assertEqual(1, len(stage1))
@@ -48,7 +48,7 @@ def serial_process():
     def step4():
         pass
         """)
-        flowchart = get_default_flowchart('bpmtest.serial_process')
+        flowchart = get_task_definition_flowchart('bpmtest.serial_process')
         self.assertEqual(4, len(flowchart))
         stage1 = flowchart[0]
         stage2 = flowchart[1]
@@ -82,7 +82,7 @@ def serial_process():
     def step4():
         pass
         """)
-        flowchart = get_default_flowchart('bpmtest.serial_process')
+        flowchart = get_task_definition_flowchart('bpmtest.serial_process')
         self.assertEqual(1, len(flowchart))
         stage1 = flowchart[0]
         self.assertEqual(4, len(stage1))
@@ -104,7 +104,7 @@ def serial_process():
     def step3():
         return step1() + step2()
         """)
-        flowchart = get_default_flowchart('bpmtest.serial_process')
+        flowchart = get_task_definition_flowchart('bpmtest.serial_process')
         self.assertEqual(2, len(flowchart))
         stage1 = flowchart[0]
         stage2 = flowchart[1]
@@ -133,7 +133,7 @@ def serial_process():
     def step31():
         pass
         """)
-        flowchart = get_default_flowchart('bpmtest.serial_process')
+        flowchart = get_task_definition_flowchart('bpmtest.serial_process')
         self.assertEqual(3, len(flowchart))
         stage1 = flowchart[0]
         stage2 = flowchart[1]
