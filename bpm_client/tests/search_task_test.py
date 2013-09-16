@@ -22,7 +22,7 @@ class EmptyComponent(AbstractComponent):
         """)
 
     def test_search_by_date_created(self):
-        task = Task.objects.get(pk=create_task('bpmtest.EmptyComponent')['id'])
+        task = Task.objects.get(pk=start_task('bpmtest.EmptyComponent')['id'])
         task.date_created = datetime(2008, 8, 8)
         task.save()
         tasks = list_tasks(
@@ -30,7 +30,7 @@ class EmptyComponent(AbstractComponent):
             date_created_ge=datetime(2008, 8, 8),
             date_created_lt=datetime(2008, 8, 9))
         self.assertEqual(1, len(tasks))
-        task = Task.objects.get(pk=create_task('bpmtest.EmptyComponent')['id'])
+        task = Task.objects.get(pk=start_task('bpmtest.EmptyComponent')['id'])
         task.date_created = datetime(2008, 8, 9)
         task.save()
         tasks = list_tasks(
@@ -45,7 +45,7 @@ class EmptyComponent(AbstractComponent):
         self.assertEqual(2, len(tasks))
 
     def test_search_by_context(self):
-        task = create_task('bpmtest.EmptyComponent')
+        task = start_task('bpmtest.EmptyComponent')
         self.assertEqual(1, len(list_tasks('bpmtest.EmptyComponent')))
         self.assertEqual(0, len(list_tasks('bpmtest.EmptyComponent', context_eq={
             'operator': 'wentao'

@@ -22,7 +22,7 @@ def loop_forever():
         bpm_sleep(5)
         """)
         self.assertEqual([], list_tasks('bpmtest.loop_forever'))
-        task_res = create_task('bpmtest.loop_forever')
+        task_res = start_task('bpmtest.loop_forever')
         task = self.execute_delayed_jobs(task_res['id'])
         self.assertEqual(states.BLOCKED, task.state)
 

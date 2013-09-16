@@ -7,7 +7,7 @@ from django.conf import settings
 
 BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
 
-__all__ = ['list_tasks', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
+__all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task']
 
 
@@ -29,19 +29,43 @@ def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context
     return json.loads(response.content)['tasks']
 
 
+def start_task(task_definition_name, *exec_args, **exec_kwargs):
+    return create_task(task_definition_name, *exec_args, **exec_kwargs).start()
+
+
 def create_task(task_definition_name, *exec_args, **exec_kwargs):
-    url = make_url_absolute('/v1/tasks/%s/' % task_definition_name)
-    response = requests.get(url)
-    assert httplib.OK == response.status_code
-    form_create_task = json.loads(response.content)['form_create_task']
-    http_call = getattr(requests, form_create_task['method'].lower())
-    body = form_create_task['body']
-    body['exec_args'] = exec_args
-    body['exec_kwargs'] = exec_kwargs
-    body = {k: json.dumps(v) for k, v in body.items()}
-    url = make_url_absolute(form_create_task['action'])
-    response = http_call(url, data=body)
-    return json.loads(response.content)
+    return TaskBuilder(task_definition_name, exec_args, exec_kwargs)
+
+
+class TaskBuilder(object):
+    def __init__(self, task_definition_name, args, kwargs):
+        self.task_definition_name = task_definition_name
+        self.args = args
+        self.kwargs = kwargs
+        self.context = {}
+
+    def __getattr__(self, item):
+        def set_context(value):
+            self.context[item] = value
+            return self
+
+        return set_context
+
+    def start(self):
+        url = make_url_absolute('/v1/tasks/%s/' % self.task_definition_name)
+        response = requests.get(url)
+        assert httplib.OK == response.status_code
+        form_create_task = json.loads(response.content)['form_create_task']
+        http_call = getattr(requests, form_create_task['method'].lower())
+        body = form_create_task['body']
+        body['exec_args'] = self.args
+        body['exec_kwargs'] = self.kwargs
+        body['context'] = self.context
+        body = {k: json.dumps(v) for k, v in body.items()}
+        url = make_url_absolute(form_create_task['action'])
+        response = http_call(url, data=body)
+        return json.loads(response.content)
+
 
 def set_task_context(task_id, key, value):
     url = make_url_absolute('/v1/search/')

@@ -21,7 +21,7 @@ from bpm.kernel import *
 def call_bk_l2():
     bpm_wait_callback('bk_l2_callback:%s' % bpm_context.step_name)
         """)
-        task = create_task('bpmtest.call_bk_l2')
+        task = start_task('bpmtest.call_bk_l2')
         task = self.execute_delayed_jobs(task['id'])
         self.assertEqual(states.BLOCKED, task.state)
         requests.post('http://127.0.0.1:7999/v1/task/%s/main/transitions/to-ready/' % task.id)
@@ -38,7 +38,7 @@ def call_bk_l2():
     def some_step():
         bpm_wait_callback('bk_l2_callback:%s' % bpm_context.step_name)
         """)
-        task = create_task('bpmtest.call_bk_l2')
+        task = start_task('bpmtest.call_bk_l2')
         task = self.execute_delayed_jobs(task['id'])
         self.assertEqual(states.BLOCKED, task.state)
         requests.post('http://127.0.0.1:7999/v1/task/%s/some_step/transitions/to-ready/' % task.id)

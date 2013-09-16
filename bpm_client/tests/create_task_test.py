@@ -12,7 +12,7 @@ class CreateTaskTest(TestCase):
         self.repo = InMemoryRepository()
         apply_context(self, mock_bpm_kernel(self.repo))
 
-    def test(self):
+    def test_without_context(self):
         self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
 from bpm.kernel import *
 
@@ -20,5 +20,16 @@ def empty_component():
     pass
         """)
         self.assertEqual([], list_tasks('bpmtest.empty_component'))
-        create_task('bpmtest.empty_component')
+        create_task('bpmtest.empty_component').start()
         self.assertEqual(1, len(list_tasks('bpmtest.empty_component')))
+
+    def test_with_context(self):
+        self.repo.set_data('bpmtest|tip|bpmtest/__init__.py', """
+from bpm.kernel import *
+
+def empty_component():
+    pass
+        """)
+        self.assertEqual([], list_tasks('bpmtest.empty_component'))
+        task = create_task('bpmtest.empty_component').hello('world').start()
+        self.assertEqual({'hello': 'world'}, get_task(task['id'])['context'])
