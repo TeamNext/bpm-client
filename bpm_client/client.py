@@ -42,11 +42,17 @@ class TaskBuilder(object):
         self.task_definition_name = task_definition_name
         self.args = args
         self.kwargs = kwargs
-        self.context = {}
+        self._context = {}
+
+    def context(self, context):
+        task_builder = self
+        for key, value in context.items():
+            task_builder = getattr(task_builder, key)(value)
+        return task_builder
 
     def __getattr__(self, item):
         def set_context(value):
-            self.context[item] = value
+            self._context[item] = value
             return self
 
         return set_context
@@ -60,7 +66,7 @@ class TaskBuilder(object):
         body = form_create_task['body']
         body['exec_args'] = self.args
         body['exec_kwargs'] = self.kwargs
-        body['context'] = self.context
+        body['context'] = self._context
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)
@@ -109,6 +115,22 @@ def get_task_trace(task_id):
     response = requests.get(url)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
+
+
+def get_task_log(task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_task_log'])
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+
 
 
 def get_task_definition_flowchart(task_definition_name):

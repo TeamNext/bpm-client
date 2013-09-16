@@ -31,5 +31,5 @@ def empty_component():
     pass
         """)
         self.assertEqual([], list_tasks('bpmtest.empty_component'))
-        task = create_task('bpmtest.empty_component').hello('world').start()
+        task = create_task('bpmtest.empty_component').context({'hello': 'world'}).start()
         self.assertEqual({'hello': 'world'}, get_task(task['id'])['context'])
