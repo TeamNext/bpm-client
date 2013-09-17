@@ -1,5 +1,6 @@
 /.idea
 *.log
+*.log.*
 *.pyc
 *.pid
 /container/settings.py
