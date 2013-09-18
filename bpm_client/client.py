@@ -8,7 +8,8 @@ from django.conf import settings
 BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
-           'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task']
+           'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
+           'callback_task', 'list_task_waiting_event_names']
 
 
 def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context_eq=None):
@@ -131,6 +132,18 @@ def get_task_log(task_id):
     return json.loads(response.content)
 
 
+def list_task_waiting_event_names(task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_task_waiting_event_names'])
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
 
 
 def get_task_definition_flowchart(task_definition_name):
@@ -209,6 +222,22 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
     return json.loads(response.content)
 
 
+def callback_task(task_id, event_name, event_data):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_retry = json.loads(response.content)['form_callback']
+    http_call = getattr(requests, form_retry['method'].lower())
+    body = form_retry['body']
+    body['event_name'] = event_name
+    body['event_data'] = json.dumps(event_data)
+    url = make_url_absolute(form_retry['action'])
+    response = http_call(url, data=body)
+    return response.content
 
 
 def make_url_absolute(url):
