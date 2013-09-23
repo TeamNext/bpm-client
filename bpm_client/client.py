@@ -222,6 +222,30 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
     return json.loads(response.content)
 
 
+def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, exec_kwargs=None):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_retry = json.loads(response.content)['form_retry']
+    http_call = getattr(requests, form_retry['method'].lower())
+    body = form_retry['body']
+    body['exec_args'] = exec_args
+    body['exec_kwargs'] = exec_kwargs
+    body['return_value'] = {
+        'data': data,
+        'ex_data': ex_data,
+        'return_code': return_code
+    }
+    body = {k: json.dumps(v) for k, v in body.items()}
+    url = make_url_absolute(form_retry['action'])
+    response = http_call(url, data=body)
+    return json.loads(response.content)
+
+
 def callback_task(task_id, event_name, event_data):
     url = make_url_absolute('/v1/search/')
     args = {
