@@ -130,6 +130,7 @@ INSTALLED_APPS = (
     'bpm.webservice',
     'bpm.scheduler',
     'bpm_client',
+    'bpm.contrib.hub',
     'south',
     'django.contrib.admin',
     'djsupervisor',
@@ -254,3 +255,7 @@ RQ_QUEUES = {
         'PASSWORD': '',
     }
 }
+PASSPORT_SERVICE_SIGNIN_URL = 'http://passport.oa.com/modules/passport/signin.ashx'
+PASSPORT_SERVICE_SIGNOUT_URL = 'http://passport.oa.com/modules/passport/signout.ashx'
+PASSPORT_SERVICE_WSDL = 'http://passport.oa.com/services/passportservice.asmx?WSDL'
+AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
