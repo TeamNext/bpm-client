@@ -24,10 +24,11 @@ def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context
     for key, value in context_eq.items():
         args['context_%s_eq' % key] = value
     response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
     url = make_url_absolute(json.loads(response.content)['rel_tasks'])
     response = requests.get(url)
     assert httplib.OK == response.status_code
-    return json.loads(response.content)['tasks']
+    return json.loads(response.content)
 
 
 def start_task(task_definition_name, *exec_args, **exec_kwargs):
@@ -59,8 +60,12 @@ class TaskBuilder(object):
         return set_context
 
     def start(self):
-        url = make_url_absolute('/v1/tasks/%s/' % self.task_definition_name)
-        response = requests.get(url)
+        url = make_url_absolute('/v1/search/')
+        args = {
+            'searching_type': 'task',
+            'name_eq': self.task_definition_name
+        }
+        response = requests.post(url, data=args)
         assert httplib.OK == response.status_code
         form_create_task = json.loads(response.content)['form_create_task']
         http_call = getattr(requests, form_create_task['method'].lower())
@@ -71,6 +76,7 @@ class TaskBuilder(object):
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)
+        assert httplib.OK == response.status_code
         return json.loads(response.content)
 
 
@@ -89,7 +95,7 @@ def set_task_context(task_id, key, value):
     body['value'] = value
     url = make_url_absolute(form_set_context['action'])
     response = http_call(url, data=body)
-    return json.loads(response.content)
+    return response.content
 
 def get_task(task_id):
     url = make_url_absolute('/v1/search/')
@@ -146,13 +152,25 @@ def list_task_waiting_event_names(task_id):
     return json.loads(response.content)
 
 
-def get_task_definition_flowchart(task_definition_name):
+def get_task_definition_flowchart(task_definition_name, *args, **kwargs):
     url = make_url_absolute('/v1/search/')
     response = requests.post(url, data={'searching_type': 'task-definition', 'name_eq': task_definition_name})
-    rel_default_flowchart = make_url_absolute(json.loads(response.content)['rel_default_flowchart'])
-    response = requests.get(rel_default_flowchart)
     assert httplib.OK == response.status_code
-    return json.loads(response.content)
+    if args or kwargs:
+        form_custom_flowchart = json.loads(response.content)['form_custom_flowchart']
+        http_call = getattr(requests, form_custom_flowchart['method'].lower())
+        body = form_custom_flowchart['body']
+        body['exec_args'] = json.dumps(args)
+        body['exec_kwargs'] = json.dumps(kwargs)
+        url = make_url_absolute(form_custom_flowchart['action'])
+        response = http_call(url, data=body)
+        assert httplib.OK == response.status_code
+        return json.loads(response.content)
+    else:
+        rel_default_flowchart = make_url_absolute(json.loads(response.content)['rel_default_flowchart'])
+        response = requests.get(rel_default_flowchart)
+        assert httplib.OK == response.status_code
+        return json.loads(response.content)
 
 
 def suspend_task(task_id):
@@ -219,6 +237,7 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
     body = {k: json.dumps(v) for k, v in body.items()}
     url = make_url_absolute(form_retry['action'])
     response = http_call(url, data=body)
+    assert httplib.OK == response.status_code
     return json.loads(response.content)
 
 

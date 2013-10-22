@@ -6,9 +6,9 @@ from bpm_client.client import *
 from .client_test_helper import run_test_server
 from datetime import datetime
 
-class SearchTaskTest(TestCase):
+class ListTasksTest(TestCase):
     def setUp(self):
-        super(SearchTaskTest, self).setUp()
+        super(ListTasksTest, self).setUp()
         apply_context(self, run_test_server())
         self.repo = InMemoryRepository()
         apply_context(self, mock_bpm_kernel(self.repo))
