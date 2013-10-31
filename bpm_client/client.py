@@ -59,7 +59,10 @@ class TaskBuilder(object):
 
         return set_context
 
-    def start(self):
+    def start_later(self):
+        return self.start(start_later=True)
+
+    def start(self, start_later=False):
         url = make_url_absolute('/v1/search/')
         args = {
             'searching_type': 'task',
@@ -73,6 +76,7 @@ class TaskBuilder(object):
         body['exec_args'] = self.args
         body['exec_kwargs'] = self.kwargs
         body['context'] = self._context
+        body['start_later'] = start_later
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)

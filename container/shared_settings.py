@@ -260,4 +260,4 @@ RQ_QUEUES = {
 PASSPORT_SERVICE_SIGNIN_URL = 'http://passport.oa.com/modules/passport/signin.ashx'
 PASSPORT_SERVICE_SIGNOUT_URL = 'http://passport.oa.com/modules/passport/signout.ashx'
 PASSPORT_SERVICE_WSDL = 'http://passport.oa.com/services/passportservice.asmx?WSDL'
-# AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
+AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
