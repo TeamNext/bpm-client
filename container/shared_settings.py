@@ -261,3 +261,4 @@ PASSPORT_SERVICE_SIGNIN_URL = 'http://passport.oa.com/modules/passport/signin.as
 PASSPORT_SERVICE_SIGNOUT_URL = 'http://passport.oa.com/modules/passport/signout.ashx'
 PASSPORT_SERVICE_WSDL = 'http://passport.oa.com/services/passportservice.asmx?WSDL'
 AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
+ANONYMOUS_USER_ID = -1
