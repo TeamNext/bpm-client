@@ -264,4 +264,4 @@ PASSPORT_SERVICE_WSDL = 'http://passport.oa.com/services/passportservice.asmx?WS
 AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
 ANONYMOUS_USER_ID = -1
 BPM_JOB_WORKER = 'bpm.workers.qos.QoSBackend'
-QOS_URL = 'http://127.0.0.1:8080/'
+QOS_URL = 'http://127.0.0.1:10086/'
