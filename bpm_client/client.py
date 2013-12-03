@@ -5,7 +5,7 @@ import requests
 import requests.packages.urllib3.util
 from django.conf import settings
 
-BPM_URL = getattr(settings, 'BPM_URL', '') or 'http://127.0.0.1:7999'
+BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -31,10 +31,13 @@ def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context
     return json.loads(response.content)
 
 
+# directly create and start a task, return the new task itself
 def start_task(task_definition_name, *exec_args, **exec_kwargs):
     return create_task(task_definition_name, *exec_args, **exec_kwargs).start()
 
 
+# return a TaskBuilder object, which can set bpm_context then start.
+# if you want directly start a task, use api:start_task() instead
 def create_task(task_definition_name, *exec_args, **exec_kwargs):
     return TaskBuilder(task_definition_name, exec_args, exec_kwargs)
 
@@ -290,6 +293,6 @@ def callback_task(task_id, event_name, event_data):
 def make_url_absolute(url):
     scheme, auth, host, port, path, query, fragment = requests.packages.urllib3.util.parse_url(url)
     if not scheme:
-        return '%s%s' % (BPM_URL, url)
+        return '%s%s' % (BPM_SERVICE_URL, url)
     else:
         return url

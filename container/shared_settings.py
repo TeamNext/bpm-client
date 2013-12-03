@@ -115,7 +115,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_ROOT, 'templates'),
+    # os.path.join(PROJECT_ROOT, 'templates'),
 )
 
 INSTALLED_APPS = (
@@ -134,6 +134,7 @@ INSTALLED_APPS = (
     'bpm.contrib.hub',
     'bpm.contrib.butler',
     'south',
+    'guardian',
     'django.contrib.admin',
     'djsupervisor',
     'django_rq',
@@ -198,7 +199,7 @@ LOGGING = {
         },
         'bpm': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'bpm.kernel.jobs': {
@@ -239,7 +240,7 @@ elif WSGI_ENV.endswith("testing"):
 else:
     RUN_MODE = "DEVELOP"
 if RUN_MODE=='DEVELOP':
-    REPO_TYPE = 'fs'
+    REPO_TYPE = 'hg'
 else:
     REPO_TYPE='hg'
 REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
@@ -262,3 +263,5 @@ PASSPORT_SERVICE_SIGNOUT_URL = 'http://passport.oa.com/modules/passport/signout.
 PASSPORT_SERVICE_WSDL = 'http://passport.oa.com/services/passportservice.asmx?WSDL'
 AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
 ANONYMOUS_USER_ID = -1
+BPM_JOB_WORKER = 'bpm.workers.qos.QoSBackend'
+QOS_URL = 'http://127.0.0.1:10086/'
