@@ -31,10 +31,13 @@ def list_tasks(name_eq=None, date_created_ge=None, date_created_lt=None, context
     return json.loads(response.content)
 
 
+# directly create and start a task, return the new task itself
 def start_task(task_definition_name, *exec_args, **exec_kwargs):
     return create_task(task_definition_name, *exec_args, **exec_kwargs).start()
 
 
+# return a TaskBuilder object, which can set bpm_context then start.
+# if you want directly start a task, use api:start_task() instead
 def create_task(task_definition_name, *exec_args, **exec_kwargs):
     return TaskBuilder(task_definition_name, exec_args, exec_kwargs)
 
