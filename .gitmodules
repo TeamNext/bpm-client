@@ -1,3 +1,6 @@
 [submodule "bpm.py"]
 	path = bpm.py
 	url = https://github.com/TeamNext/bpm.py.git
+[submodule "qos.py"]
+	path = qos.py
+	url = https://github.com/TeamNext/qos.py.git

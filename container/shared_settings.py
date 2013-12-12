@@ -133,6 +133,8 @@ INSTALLED_APPS = (
     'bpm.contrib.auth',
     'bpm.contrib.hub',
     'bpm.contrib.butler',
+    # 'bpm.contrib.librarian',
+    # 'bpm.contrib.workflow',
     'south',
     'guardian',
     'django.contrib.admin',
@@ -181,6 +183,13 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 10,
             'backupCount': 5
         },
+        'requests_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'simple',
+            'filename': os.path.join(PROJECT_ROOT, 'requests.log'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5
+        },
         'sandbox': {
             'class': 'bpm.logging.BpmLogHandler',
             'formatter': 'bare'
@@ -188,7 +197,7 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['console', 'mail_admins'],
+            'handlers': ['console', 'mail_admins', 'requests_file'],
             'level': 'ERROR',
             'propagate': True,
         },
@@ -240,7 +249,7 @@ elif WSGI_ENV.endswith("testing"):
 else:
     RUN_MODE = "DEVELOP"
 if RUN_MODE=='DEVELOP':
-    REPO_TYPE = 'hg'
+    REPO_TYPE = 'fs'
 else:
     REPO_TYPE='hg'
 REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
@@ -265,3 +274,4 @@ AUTHENTICATION_BACKENDS = ('bpm.contrib.auth.backends.TicketBackend',)
 ANONYMOUS_USER_ID = -1
 BPM_JOB_WORKER = 'bpm.workers.qos.QoSBackend'
 QOS_URL = 'http://127.0.0.1:10086/'
+# LIBRARIAN_URL = 'http://127.0.0.1:8001/librarian/'
