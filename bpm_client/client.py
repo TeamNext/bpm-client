@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import json
 import httplib
+import logging
 
 import requests
 import requests.packages.urllib3.util
@@ -8,11 +9,13 @@ from django.conf import settings
 
 BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names']
+
+LOGGER = logging.getLogger(__name__)
 
 # 获取任务列表（根据任务名，日期，context来搜索）
 def list_tasks(name_eq, date_created_ge=None, date_created_lt=None, context_eq=None):
@@ -35,23 +38,26 @@ def list_tasks(name_eq, date_created_ge=None, date_created_lt=None, context_eq=N
 
 
 # 直接创建并开始一个任务，返回值即为新创建的任务
-def start_task(task_definition_name, *exec_args, **exec_kwargs):
-    return create_task(task_definition_name, *exec_args, **exec_kwargs).start()
+def start_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
+    return create_task(task_definition_name, task_info, *exec_args, **exec_kwargs).start()
 
 
 # 返回一个TaskBuilder对象， 能设置bpm_context然后开始执行
 # 如果你需要的是直接创建并开始一个任务，换用start_task方法
-def create_task(task_definition_name, *exec_args, **exec_kwargs):
-    return TaskBuilder(task_definition_name, exec_args, exec_kwargs)
+def create_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
+    return TaskBuilder(task_definition_name, task_info, *exec_args, **exec_kwargs)
 
 
 # 用于创建一个task，并设置其context， 然后再开始执行
+# info_data: app, cc_biz_id, operator, operate_type, origin, operators=None, title=None, ticket=None, 
 class TaskBuilder(object):
-    def __init__(self, task_definition_name, args, kwargs):
+    def __init__(self, task_definition_name, task_info, *exec_args, **exec_kwargs):
         self.task_definition_name = task_definition_name
-        self.args = args
-        self.kwargs = kwargs
+        self.args = exec_args
+        self.kwargs = exec_kwargs
         self._context = {}
+        self.task_info = task_info
+
 
     def context(self, context):
         task_builder = self
@@ -82,11 +88,16 @@ class TaskBuilder(object):
         body = form_create_task['body']
         body['exec_args'] = self.args
         body['exec_kwargs'] = self.kwargs
+        body['task_info'] = self.task_info
         body['context'] = self._context
         body['start_later'] = start_later
+
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)
+        if httplib.OK != response.status_code:
+            # LOGGER.error(response)
+            print response.status_code, response.content
         assert httplib.OK == response.status_code
         return json.loads(response.content)
 
