@@ -14,7 +14,7 @@ __version__ = '1.2.0'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
-           'callback_task', 'list_task_waiting_event_names', 'add_scheduler']
+           'callback_task', 'list_task_waiting_event_names', 'add_task_schedule']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -302,7 +302,7 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
 
 
 #添加一个定时任务
-def add_scheduler(name, task_info, task_args, crontab, next_time):
+def add_task_schedule(name, task_info, task_args, crontab, next_time):
     url = make_url_absolute('/', BPM_SCHEDULE_URL)
     if isinstance(task_args, dict):
         task_args = json.dumps(task_args)
