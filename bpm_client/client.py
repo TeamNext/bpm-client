@@ -8,12 +8,13 @@ import requests.packages.urllib3.util
 from django.conf import settings
 
 BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
+BPM_SCHEDULE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/task_schedule'
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
-           'callback_task', 'list_task_waiting_event_names']
+           'callback_task', 'list_task_waiting_event_names', 'add_scheduler']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -300,6 +301,28 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
     return json.loads(response.content)
 
 
+#添加一个定时任务
+def add_scheduler(name, task_info, task_args, crontab, next_time):
+    url = make_url_absolute('/', BPM_SCHEDULE_URL)
+    if isinstance(task_args, dict):
+        task_args = json.dumps(task_args)
+    args = {
+        'name': name,
+        'kwargs': task_args,
+        'crontab': crontab,
+        'time': next_time,
+        'app': task_info.get('app', ''),
+        'cc_biz_id': task_info.get('cc_biz_id', ''),
+        'operator': task_info.get('operator', ''),
+        'operators': task_info.get('operators', ''),
+        'title': task_info.get('title', ''),
+        'operate_type': task_info.get('operate_type', ''),
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+
 # 通用回调(唤醒一个事件)
 def callback_task(task_id, event_name, event_data):
     url = make_url_absolute('/v1/search/')
@@ -320,9 +343,9 @@ def callback_task(task_id, event_name, event_data):
 
 
 # 内部方法：对芯雲接口服务url的封装
-def make_url_absolute(url):
+def make_url_absolute(url, base_url = BPM_SERVICE_URL):
     scheme, auth, host, port, path, query, fragment = requests.packages.urllib3.util.parse_url(url)
     if not scheme:
-        return '%s%s' % (BPM_SERVICE_URL, url)
+        return '%s%s' % (base_url, url)
     else:
         return url
