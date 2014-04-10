@@ -9,14 +9,13 @@ import requests.packages.urllib3.util
 from django.conf import settings
 
 BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
-BPM_SCHEDULE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/task_schedule'
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names', 'add_task_schedule', 'list_task_schedules', 
-           'del_task_schedule']
+           'get_task_schedule', 'del_task_schedule']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -304,34 +303,60 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
 
 
 #添加一个定时任务
-def add_task_schedule(name, task_info, task_args, crontab, next_time):
-    url = make_url_absolute('/', BPM_SCHEDULE_URL)
-    if isinstance(task_args, dict):
-        task_args = json.dumps(task_args)
+def add_task_schedule(name, task_info, task_args, creator, crontab, next_time):
+    url = make_url_absolute('/v1/search/')
     args = {
-        'name': name,
-        'kwargs': task_args,
-        'crontab': crontab,
-        'time': next_time,
-        'app': task_info.get('app', ''),
-        'cc_biz_id': task_info.get('cc_biz_id', ''),
-        'operator': task_info.get('operator', ''),
-        'operators': task_info.get('operators', ''),
-        'title': task_info.get('title', ''),
-        'operate_type': task_info.get('operate_type', ''),
+        'searching_type': 'schedule',        
     }
     response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_add_task_schedule = json.loads(response.content)['form_add_task_schedule']
+    http_call = getattr(requests, form_add_task_schedule['method'].lower())
+    body = form_add_task_schedule['body']
+    if isinstance(task_args, dict):
+        task_args = json.dumps(task_args)
+    body['name'] = name
+    body['kwargs'] = task_args
+    body['creator'] = creator
+    body['crontab'] = crontab
+    body['time'] = next_time
+    body['app'] = task_info.get('app', '')
+    body['cc_biz_id'] = task_info.get('cc_biz_id', '')
+    body['operator'] = task_info.get('operator', '')
+    body['operators'] = task_info.get('operators', '')
+    body['title'] = task_info.get('title', '')
+    body['operate_type'] = task_info.get('operate_type', '')
+    url = make_url_absolute(form_add_task_schedule['action'])
+    response = http_call(url, data=body)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
 
 
 #获取指定创建者的所有定时任务
 def list_task_schedules(creator):
-    url = make_url_absolute('/', BPM_SCHEDULE_URL)
+    url = make_url_absolute('/v1/search/')
     args = {
+        'searching_type': 'schedule',        
         'creator': creator,
     }
-    url += "?" + urllib.urlencode(args)
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_list_task_schedules'])
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+
+#根据schedule_id获取定时任务
+def get_task_schedule(schedule_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'schedule',
+        'schedule_id': schedule_id
+    }
+    response = requests.post(url, args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_get_task_schedule'])
     response = requests.get(url)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
@@ -339,11 +364,18 @@ def list_task_schedules(creator):
 
 #根据schedule_id删除指定的定时任务, schedule_id由list_task_scheduls获取
 def del_task_schedule(schedule_id):
-    url = make_url_absolute('/', BPM_SCHEDULE_URL)
+    url = make_url_absolute('/v1/search/')
     args = {
-        'id': schedule_id,        
+        'searching_type': 'schedule',
     }
     response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_del_task_schedule = json.loads(response.content)['form_del_task_schedule']
+    http_call = getattr(requests, form_del_task_schedule['method'].lower())
+    body = form_del_task_schedule['body']
+    body['id'] = schedule_id
+    url = make_url_absolute(form_del_task_schedule['action'])
+    response = http_call(url, data=body)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
 
