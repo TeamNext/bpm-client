@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import json
+import urllib
 import httplib
 import logging
 
@@ -10,11 +11,12 @@ from django.conf import settings
 BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
 BPM_SCHEDULE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/task_schedule'
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
-           'callback_task', 'list_task_waiting_event_names', 'add_task_schedule']
+           'callback_task', 'list_task_waiting_event_names', 'add_task_schedule', 'list_task_schedules', 
+           'del_task_schedule']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -317,6 +319,29 @@ def add_task_schedule(name, task_info, task_args, crontab, next_time):
         'operators': task_info.get('operators', ''),
         'title': task_info.get('title', ''),
         'operate_type': task_info.get('operate_type', ''),
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+
+#获取指定创建者的所有定时任务
+def list_task_schedules(creator):
+    url = make_url_absolute('/', BPM_SCHEDULE_URL)
+    args = {
+        'creator': creator,
+    }
+    url += "?" + urllib.urlencode(args)
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
+
+#根据schedule_id删除指定的定时任务, schedule_id由list_task_scheduls获取
+def del_task_schedule(schedule_id):
+    url = make_url_absolute('/', BPM_SCHEDULE_URL)
+    args = {
+        'id': schedule_id,        
     }
     response = requests.post(url, data=args)
     assert httplib.OK == response.status_code
