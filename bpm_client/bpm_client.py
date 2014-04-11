@@ -10,12 +10,12 @@ from django.conf import settings
 
 BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
-           'callback_task', 'list_task_waiting_event_names', 'add_task_schedule', 'list_task_schedules', 
-           'get_task_schedule', 'del_task_schedule']
+           'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'create_task_schedule', 'list_task_schedules',
+           'get_task_schedule', 'delete_task_schedule']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -182,6 +182,20 @@ def list_task_waiting_event_names(task_id):
     assert httplib.OK == response.status_code
     return json.loads(response.content)
 
+# 获取任务的重试记录
+def list_task_tries(task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': task_id
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    url = make_url_absolute(json.loads(response.content)['rel_task_tries'])
+    response = requests.get(url)
+    assert httplib.OK == response.status_code
+    return json.loads(response.content)
+
 
 # 获取任务定义的流程图数据
 def get_task_definition_flowchart(task_definition_name, *args, **kwargs):
@@ -302,15 +316,34 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
     return json.loads(response.content)
 
 
-#添加一个定时任务
-def add_task_schedule(name, task_info, task_args, creator, crontab, next_time):
+# 通用回调(唤醒一个事件)
+def callback_task(task_id, event_name, event_data):
     url = make_url_absolute('/v1/search/')
     args = {
-        'searching_type': 'schedule',        
+        'searching_type': 'task',
+        'id_eq': task_id
     }
     response = requests.post(url, data=args)
     assert httplib.OK == response.status_code
-    form_add_task_schedule = json.loads(response.content)['form_add_task_schedule']
+    form_retry = json.loads(response.content)['form_callback']
+    http_call = getattr(requests, form_retry['method'].lower())
+    body = form_retry['body']
+    body['event_name'] = event_name
+    body['event_data'] = json.dumps(event_data)
+    url = make_url_absolute(form_retry['action'])
+    response = http_call(url, data=body)
+    return response.content
+
+
+#添加一个定时任务
+def create_task_schedule(name, task_info, task_args, creator, crontab, next_time):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task-schedule',
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_add_task_schedule = json.loads(response.content)['form_create_task_schedule']
     http_call = getattr(requests, form_add_task_schedule['method'].lower())
     body = form_add_task_schedule['body']
     if isinstance(task_args, dict):
@@ -336,7 +369,7 @@ def add_task_schedule(name, task_info, task_args, creator, crontab, next_time):
 def list_task_schedules(creator):
     url = make_url_absolute('/v1/search/')
     args = {
-        'searching_type': 'schedule',        
+        'searching_type': 'task-schedule',
         'creator': creator,
     }
     response = requests.post(url, data=args)
@@ -351,7 +384,7 @@ def list_task_schedules(creator):
 def get_task_schedule(schedule_id):
     url = make_url_absolute('/v1/search/')
     args = {
-        'searching_type': 'schedule',
+        'searching_type': 'task-schedule',
         'schedule_id': schedule_id
     }
     response = requests.post(url, args)
@@ -363,40 +396,21 @@ def get_task_schedule(schedule_id):
 
 
 #根据schedule_id删除指定的定时任务, schedule_id由list_task_scheduls获取
-def del_task_schedule(schedule_id):
+def delete_task_schedule(schedule_id):
     url = make_url_absolute('/v1/search/')
     args = {
-        'searching_type': 'schedule',
+        'searching_type': 'task-schedule',
+        'schedule_id': schedule_id
     }
     response = requests.post(url, data=args)
     assert httplib.OK == response.status_code
-    form_del_task_schedule = json.loads(response.content)['form_del_task_schedule']
+    form_del_task_schedule = json.loads(response.content)['form_delete_task_schedule']
     http_call = getattr(requests, form_del_task_schedule['method'].lower())
     body = form_del_task_schedule['body']
-    body['id'] = schedule_id
     url = make_url_absolute(form_del_task_schedule['action'])
     response = http_call(url, data=body)
     assert httplib.OK == response.status_code
     return json.loads(response.content)
-
-
-# 通用回调(唤醒一个事件)
-def callback_task(task_id, event_name, event_data):
-    url = make_url_absolute('/v1/search/')
-    args = {
-        'searching_type': 'task',
-        'id_eq': task_id
-    }
-    response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
-    form_retry = json.loads(response.content)['form_callback']
-    http_call = getattr(requests, form_retry['method'].lower())
-    body = form_retry['body']
-    body['event_name'] = event_name
-    body['event_data'] = json.dumps(event_data)
-    url = make_url_absolute(form_retry['action'])
-    response = http_call(url, data=body)
-    return response.content
 
 
 # 内部方法：对芯雲接口服务url的封装
