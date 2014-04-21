@@ -1,6 +1,6 @@
 # Django settings for container project.
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -133,6 +133,8 @@ INSTALLED_APPS = (
     'bpm.contrib.auth',
     'bpm.contrib.hub',
     'bpm.contrib.butler',
+    'bpm.contrib.xinyun',
+    'bpm.contrib.analysis',
     # 'bpm.contrib.librarian',
     # 'bpm.contrib.workflow',
     'south',
@@ -203,37 +205,42 @@ LOGGING = {
         },
         '__sandbox__': {
             'handlers': ['sandbox'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
         'bpm': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
+        },
+        'bpm.webservice': {
+            'handlers': ['console', 'sandbox'],
+            'level': 'INFO',
+            'propagate': False,
         },
         'bpm.kernel.jobs': {
             'handlers': ['console', 'file', 'sandbox'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
         'bpm.kernel.executor': {
             'handlers': ['console', 'file', 'sandbox'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
         'bpm.kernel.sandbox': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'rq': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
         'bpm.kernel.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
     }
@@ -253,6 +260,9 @@ if RUN_MODE=='DEVELOP':
 else:
     REPO_TYPE='hg'
 REPO_ROOT=os.path.join(PROJECT_ROOT, 'repo')
+# REMOTE_REPO = True
+# REMOTE_REPO_ROOT = 'http://t.ied.com/hg/'
+# REMOTE_REPO_SERVICE = 'http://t.ied.com/bpm/hub/api/'
 RQ_QUEUES = {
     'default': {
         'HOST': 'localhost',

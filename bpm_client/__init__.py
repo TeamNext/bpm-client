@@ -1,1 +1,1 @@
-from .client import *
+from .bpm_client import *

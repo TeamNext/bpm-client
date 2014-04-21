@@ -8,13 +8,14 @@ import requests
 import requests.packages.urllib3.util
 from django.conf import settings
 
-BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://t.ied.com/bpm') + '/service'
+BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com') + '/service'
 
-__version__ = '1.2.3'
+__version__ = '1.2.4'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
-           'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'create_task_schedule', 'list_task_schedules',
+           'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'change_task_step_args',
+           'create_task_schedule', 'list_task_schedules',
            'get_task_schedule', 'delete_task_schedule']
 
 LOGGER = logging.getLogger(__name__)
@@ -119,6 +120,25 @@ def set_task_context(task_id, key, value):
     body['key'] = key
     body['value'] = value
     url = make_url_absolute(form_set_context['action'])
+    response = http_call(url, data=body)
+    return response.content
+
+# 改变任务步骤的参数
+def change_task_step_args(task_id, step_name, step_args):
+    url = make_url_absolute('/v1/search')
+    args = {
+        'searching_type': 'task-step',
+        'task_id_eq': task_id,
+        'step_name_eq': step_name
+    }
+    response = requests.post(url, data=args)
+    assert httplib.OK == response.status_code
+    form_change_args = json.loads(response.content)['form_change_args']
+    http_call = getattr(requests, form_change_args['method'].lower())
+    body = form_change_args['body']
+    body['args'] = step_args
+    body = {k: json.dumps(v) for k, v in body.items()}
+    url = make_url_absolute(form_change_args['action'])
     response = http_call(url, data=body)
     return response.content
 
