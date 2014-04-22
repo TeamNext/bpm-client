@@ -11,7 +11,7 @@ try:
     from django.conf import settings
 
     BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com') + '/service'
-except ImportError:
+except:
     if '__main__' != __name__:
         raise
     BPM_SERVICE_URL = None
@@ -472,7 +472,8 @@ def main():
     command_func = getattr(sys.modules['__main__'], command_name)
     command_args = command_args.split(',')
     command_args = [json.loads(a) if a.startswith('{') and a.endswith('}') else a for a in command_args]
-    command_func(*command_args)
+    result = command_func(*command_args)
+    LOGGER.info('result: %s' % result)
 
 if '__main__' == __name__:
     main()
