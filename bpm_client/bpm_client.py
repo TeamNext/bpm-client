@@ -1,16 +1,22 @@
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import json
-import urllib
 import httplib
 import logging
 
 import requests
 import requests.packages.urllib3.util
-from django.conf import settings
 
-BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com') + '/service'
+try:
+    from django.conf import settings
 
-__version__ = '1.2.4'
+    BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com') + '/service'
+except ImportError:
+    if '__main__' != __name__:
+        raise
+    BPM_SERVICE_URL = None
+
+__version__ = '1.2.5'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -33,10 +39,10 @@ def list_tasks(name_eq, date_created_ge=None, date_created_lt=None, context_eq=N
     for key, value in context_eq.items():
         args['context_%s_eq' % key] = value
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_tasks'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -85,7 +91,7 @@ class TaskBuilder(object):
             'name_eq': self.task_definition_name
         }
         response = requests.post(url, data=args)
-        assert httplib.OK == response.status_code
+        assert_http_call_is_successful(response)
         form_create_task = json.loads(response.content)['form_create_task']
         http_call = getattr(requests, form_create_task['method'].lower())
         body = form_create_task['body']
@@ -101,7 +107,7 @@ class TaskBuilder(object):
         if httplib.OK != response.status_code:
             # LOGGER.error(response)
             print response.status_code, response.content
-        assert httplib.OK == response.status_code
+        assert_http_call_is_successful(response)
         return json.loads(response.content)
 
 
@@ -113,7 +119,7 @@ def set_task_context(task_id, key, value):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_set_context = json.loads(response.content)['form_set_context']
     http_call = getattr(requests, form_set_context['method'].lower())
     body = form_set_context['body']
@@ -121,18 +127,19 @@ def set_task_context(task_id, key, value):
     body['value'] = value
     url = make_url_absolute(form_set_context['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 # 改变任务步骤的参数
 def change_task_step_args(task_id, step_name, step_args):
-    url = make_url_absolute('/v1/search')
+    url = make_url_absolute('/v1/search/')
     args = {
         'searching_type': 'task-step',
         'task_id_eq': task_id,
         'step_name_eq': step_name
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_change_args = json.loads(response.content)['form_change_args']
     http_call = getattr(requests, form_change_args['method'].lower())
     body = form_change_args['body']
@@ -140,6 +147,7 @@ def change_task_step_args(task_id, step_name, step_args):
     body = {k: json.dumps(v) for k, v in body.items()}
     url = make_url_absolute(form_change_args['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 
@@ -151,10 +159,10 @@ def get_task(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_task'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -166,10 +174,10 @@ def get_task_trace(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_task_trace'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -181,10 +189,10 @@ def get_task_log(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_task_log'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -196,10 +204,10 @@ def list_task_waiting_event_names(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_task_waiting_event_names'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 # 获取任务的重试记录
@@ -210,10 +218,10 @@ def list_task_tries(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_task_tries'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -221,7 +229,7 @@ def list_task_tries(task_id):
 def get_task_definition_flowchart(task_definition_name, *args, **kwargs):
     url = make_url_absolute('/v1/search/')
     response = requests.post(url, data={'searching_type': 'task-definition', 'name_eq': task_definition_name})
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     if args or kwargs:
         form_custom_flowchart = json.loads(response.content)['form_custom_flowchart']
         http_call = getattr(requests, form_custom_flowchart['method'].lower())
@@ -230,12 +238,12 @@ def get_task_definition_flowchart(task_definition_name, *args, **kwargs):
         body['exec_kwargs'] = json.dumps(kwargs)
         url = make_url_absolute(form_custom_flowchart['action'])
         response = http_call(url, data=body)
-        assert httplib.OK == response.status_code
+        assert_http_call_is_successful(response)
         return json.loads(response.content)
     else:
         rel_default_flowchart = make_url_absolute(json.loads(response.content)['rel_default_flowchart'])
         response = requests.get(rel_default_flowchart)
-        assert httplib.OK == response.status_code
+        assert_http_call_is_successful(response)
         return json.loads(response.content)
 
 
@@ -247,7 +255,7 @@ def suspend_task(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_suspend = json.loads(response.content)['form_suspend']
     http_call = getattr(requests, form_suspend['method'].lower())
     body = form_suspend['body']
@@ -264,7 +272,7 @@ def resume_task(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_resume = json.loads(response.content)['form_resume']
     http_call = getattr(requests, form_resume['method'].lower())
     body = form_resume['body']
@@ -281,7 +289,7 @@ def revoke_task(task_id):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_revoke = json.loads(response.content)['form_revoke']
     http_call = getattr(requests, form_revoke['method'].lower())
     body = form_revoke['body']
@@ -298,7 +306,7 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_retry = json.loads(response.content)['form_retry']
     http_call = getattr(requests, form_retry['method'].lower())
     body = form_retry['body']
@@ -307,7 +315,7 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
     body = {k: json.dumps(v) for k, v in body.items()}
     url = make_url_absolute(form_retry['action'])
     response = http_call(url, data=body)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -319,7 +327,7 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_retry = json.loads(response.content)['form_retry']
     http_call = getattr(requests, form_retry['method'].lower())
     body = form_retry['body']
@@ -344,7 +352,7 @@ def callback_task(task_id, event_name, event_data):
         'id_eq': task_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_retry = json.loads(response.content)['form_callback']
     http_call = getattr(requests, form_retry['method'].lower())
     body = form_retry['body']
@@ -362,7 +370,7 @@ def create_task_schedule(name, task_info, task_args, creator, crontab, next_time
         'searching_type': 'task-schedule',
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_add_task_schedule = json.loads(response.content)['form_create_task_schedule']
     http_call = getattr(requests, form_add_task_schedule['method'].lower())
     body = form_add_task_schedule['body']
@@ -381,7 +389,7 @@ def create_task_schedule(name, task_info, task_args, creator, crontab, next_time
     body['operate_type'] = task_info.get('operate_type', '')
     url = make_url_absolute(form_add_task_schedule['action'])
     response = http_call(url, data=body)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -393,10 +401,10 @@ def list_task_schedules(creator):
         'creator': creator,
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_list_task_schedules'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -408,10 +416,10 @@ def get_task_schedule(schedule_id):
         'schedule_id': schedule_id
     }
     response = requests.post(url, args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     url = make_url_absolute(json.loads(response.content)['rel_get_task_schedule'])
     response = requests.get(url)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -423,20 +431,48 @@ def delete_task_schedule(schedule_id):
         'schedule_id': schedule_id
     }
     response = requests.post(url, data=args)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     form_del_task_schedule = json.loads(response.content)['form_delete_task_schedule']
     http_call = getattr(requests, form_del_task_schedule['method'].lower())
     body = form_del_task_schedule['body']
     url = make_url_absolute(form_del_task_schedule['action'])
     response = http_call(url, data=body)
-    assert httplib.OK == response.status_code
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
 # 内部方法：对芯雲接口服务url的封装
-def make_url_absolute(url, base_url = BPM_SERVICE_URL):
+def make_url_absolute(url, base_url=None):
+    base_url = base_url or BPM_SERVICE_URL
     scheme, auth, host, port, path, query, fragment = requests.packages.urllib3.util.parse_url(url)
     if not scheme:
         return '%s%s' % (base_url, url)
     else:
         return url
+
+def assert_http_call_is_successful(response):
+    if httplib.OK != response.status_code:
+        raise Exception('response status code: %s, %s' % (response.status_code, response.content))
+
+
+def main():
+    global BPM_SERVICE_URL
+    import argparse
+    import sys
+
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s: %(message)s')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--bpm-url', help='which bpm env to use', default='http://127.0.0.1:8001')
+    parser.add_argument('command', help='change_task_step_args:123,some_step,{"arg1":"world"}')
+    args = parser.parse_args()
+    BPM_SERVICE_URL = args.bpm_url + '/service'
+    LOGGER.info('BPM SERVICE URL: %s' % BPM_SERVICE_URL)
+    raw_input('are you sure?')
+    command_name, _, command_args = args.command.partition(':')
+    command_func = getattr(sys.modules['__main__'], command_name)
+    command_args = command_args.split(',')
+    command_args = [json.loads(a) if a.startswith('{') and a.endswith('}') else a for a in command_args]
+    command_func(*command_args)
+
+if '__main__' == __name__:
+    main()
