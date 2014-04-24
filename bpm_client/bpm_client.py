@@ -16,7 +16,7 @@ except:
         raise
     BPM_SERVICE_URL = None
 
-__version__ = '1.2.5'
+__version__ = '1.2.6'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -104,9 +104,6 @@ class TaskBuilder(object):
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)
-        if httplib.OK != response.status_code:
-            # LOGGER.error(response)
-            print response.status_code, response.content
         assert_http_call_is_successful(response)
         return json.loads(response.content)
 
@@ -261,6 +258,7 @@ def suspend_task(task_id):
     body = form_suspend['body']
     url = make_url_absolute(form_suspend['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 
@@ -278,6 +276,7 @@ def resume_task(task_id):
     body = form_resume['body']
     url = make_url_absolute(form_resume['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 
@@ -295,6 +294,7 @@ def revoke_task(task_id):
     body = form_revoke['body']
     url = make_url_absolute(form_revoke['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 
@@ -341,6 +341,7 @@ def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, ex
     body = {k: json.dumps(v) for k, v in body.items()}
     url = make_url_absolute(form_retry['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return json.loads(response.content)
 
 
@@ -360,6 +361,7 @@ def callback_task(task_id, event_name, event_data):
     body['event_data'] = json.dumps(event_data)
     url = make_url_absolute(form_retry['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
     return response.content
 
 
