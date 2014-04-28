@@ -3,6 +3,7 @@
 import json
 import httplib
 import logging
+import datetime
 
 import requests
 import requests.packages.urllib3.util
@@ -16,7 +17,7 @@ except:
         raise
     BPM_SERVICE_URL = None
 
-__version__ = '1.2.6'
+__version__ = '1.2.7'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -392,7 +393,55 @@ def create_task_schedule(name, task_info, task_args, creator, crontab, next_time
     url = make_url_absolute(form_add_task_schedule['action'])
     response = http_call(url, data=body)
     assert_http_call_is_successful(response)
+    _add_mention(name, task_info, creator, next_time, url)
     return json.loads(response.content)
+
+
+def _add_mention(name, task_info, creator, next_time, url):
+    mentions = task_info.get('mentions', None)
+    if not mentions:
+        return
+    time_list = mentions.split(";")
+    time_format = "%Y-%m-%d %H:%M:%S"
+    for m_time in time_list:
+        mention_dt = datetime.datetime.strptime(next_time, time_format) - datetime.timedelta(minutes=int(m_time))
+        mention_time = datetime.datetime.strftime(mention_dt, time_format)
+        message = u"你关注的芯雲定时任务%s, 将于%s开始执行" % (name, next_time)
+
+        #wechat_send
+        body = {}
+        body['name'] = "bk.smcs.wechat_send"
+        body['kwargs'] = json.dumps({'receivers': task_info.get('operators'), 
+                'message':message})
+        body['creator'] = creator
+        body['crontab'] = ""
+        body['time'] = mention_time
+        body['app'] = task_info.get('app', '')
+        body['cc_biz_id'] = task_info.get('cc_biz_id', '')
+        body['operator'] = task_info.get('operator', '')
+        body['operators'] = task_info.get('operators', '')
+        body['title'] = task_info.get('title', '')
+        body['operate_type'] = task_info.get('operate_type', '')
+        response = requests.post(url, data=body)
+
+        #mail_send
+        body = {}
+        body['name'] = "bk.tof.send_mail"
+        body['kwargs'] = json.dumps({'sender': creator, 
+            'receiver': task_info.get('operators'), 
+            'title': message,
+            'content': message})
+        body['creator'] = creator
+        body['crontab'] = ""
+        body['time'] = mention_time
+        body['app'] = task_info.get('app', '')
+        body['cc_biz_id'] = task_info.get('cc_biz_id', '')
+        body['operator'] = task_info.get('operator', '')
+        body['operators'] = task_info.get('operators', '')
+        body['title'] = task_info.get('title', '')
+        body['operate_type'] = task_info.get('operate_type', '')
+        response = requests.post(url, data=body)
+
 
 
 #获取指定创建者的所有定时任务
