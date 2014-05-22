@@ -11,13 +11,14 @@ import requests.packages.urllib3.util
 try:
     from django.conf import settings
 
-    BPM_SERVICE_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com') + '/service'
+    BPM_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com')
+    BPM_SERVICE_URL = BPM_URL + '/service'
 except:
     if '__main__' != __name__:
         raise
     BPM_SERVICE_URL = None
 
-__version__ = '1.2.7'
+__version__ = '1.2.8'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -82,10 +83,13 @@ class TaskBuilder(object):
 
         return set_context
 
+    def start_debug(self):
+        return self.start(debug=True)
+
     def start_later(self):
         return self.start(start_later=True)
 
-    def start(self, start_later=False):
+    def start(self, start_later=False, debug=False):
         url = make_url_absolute('/v1/search/')
         args = {
             'searching_type': 'task',
@@ -106,7 +110,14 @@ class TaskBuilder(object):
         url = make_url_absolute(form_create_task['action'])
         response = http_call(url, data=body)
         assert_http_call_is_successful(response)
-        return json.loads(response.content)
+
+        # 用本地浏览器打开任务流程页
+        retval = json.loads(response.content)
+        task_id = retval.get('id')
+        if task_id and debug:
+            import webbrowser
+            webbrowser.open('{}/butler/task/{}/flowchart/'.format(BPM_URL, task_id))
+        return retval
 
 
 # 设置任务的全局变量
