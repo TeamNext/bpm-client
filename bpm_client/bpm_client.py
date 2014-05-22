@@ -16,6 +16,7 @@ try:
 except:
     if '__main__' != __name__:
         raise
+    BPM_URL = None
     BPM_SERVICE_URL = None
 
 __version__ = '1.2.8'
