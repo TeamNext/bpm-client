@@ -10,8 +10,11 @@ import requests.packages.urllib3.util
 
 try:
     from django.conf import settings
-
-    BPM_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com')
+    if settings.RUN_MODE == 'PRODUCT':
+        BPM_URL = 'http://xy.ied.com'
+    else:
+        BPM_URL = 'http://stage.xy.ied.com'
+    # BPM_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com')
     BPM_SERVICE_URL = BPM_URL + '/service'
 except:
     if '__main__' != __name__:
@@ -19,7 +22,7 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.2.8'
+__version__ = '1.2.9'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
