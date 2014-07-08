@@ -22,7 +22,7 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.2.9'
+__version__ = '1.3.0'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
