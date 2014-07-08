@@ -7,7 +7,7 @@ import datetime
 
 import requests
 import requests.packages.urllib3.util
-
+import uuid
 try:
     from django.conf import settings
     if settings.RUN_MODE == 'PRODUCT':
@@ -112,7 +112,7 @@ class TaskBuilder(object):
 
         body = {k: json.dumps(v) for k, v in body.items()}
         url = make_url_absolute(form_create_task['action'])
-        response = http_call(url, data=body)
+        response = http_call(url, data=body, headers={"X-RANDOM-TOKEN": uuid.uuid1().get_hex()})
         assert_http_call_is_successful(response)
 
         # 用本地浏览器打开任务流程页
