@@ -22,13 +22,13 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'change_task_step_args',
-           'create_task_schedule', 'list_task_schedules',
-           'get_task_schedule', 'delete_task_schedule']
+           'create_task_schedule', 'list_task_schedules', 'get_task_schedule', 'delete_task_schedule', 
+           'get_tasks_by_schedule']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -503,6 +503,31 @@ def delete_task_schedule(schedule_id):
     body = form_del_task_schedule['body']
     url = make_url_absolute(form_del_task_schedule['action'])
     response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
+    return json.loads(response.content)
+
+
+#根据定时任务的schdule_id获取指定时间内生成的task
+def get_tasks_by_schedule(schedule_id, datetime_created_ge, datetime_created_lt):
+    """时间格式:"2014-08-25 00:00:00", 时间范围不能超时24小时"""
+    import datetime
+    deltahours = 24
+    fmt="%Y-%m-%d %H:%M:%S"
+    datetime_created_ge = datetime.datetime.strptime(datetime_created_ge, fmt)
+    datetime_created_lt = datetime.datetime.strptime(datetime_created_lt, fmt)
+    if datetime_created_lt - datetime_created_ge > datetime.timedelta(hours=deltahours):
+        raise Exception('Too large time range.At most 24 hours.')
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'tasks-by-schedule',
+        'schedule_id': schedule_id,
+        'datetime_created_ge': datetime_created_ge.strftime('%s.%f'),
+        'datetime_created_lt': datetime_created_lt.strftime('%s.%f'),
+    }
+    response = requests.post(url, args)
+    assert_http_call_is_successful(response)
+    url = make_url_absolute(json.loads(response.content)['rel_get_tasks_by_schedule'])
+    response = requests.get(url)
     assert_http_call_is_successful(response)
     return json.loads(response.content)
 
