@@ -22,13 +22,13 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'change_task_step_args',
            'create_task_schedule', 'list_task_schedules', 'get_task_schedule', 'delete_task_schedule', 
-           'get_tasks_by_schedule']
+           'get_tasks_by_schedule', 'get_task_context']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -142,6 +142,22 @@ def set_task_context(task_id, key, value):
     response = http_call(url, data=body)
     assert_http_call_is_successful(response)
     return response.content
+
+# 获取任务的全局变量
+def get_task_context(task_id, key):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task-context',
+        'id_eq': task_id,
+        'key': key
+    }
+    response = requests.post(url, data=args)
+    assert_http_call_is_successful(response)
+    url = make_url_absolute(json.loads(response.content)['rel_get_task_context'])
+    response = requests.get(url)
+    assert_http_call_is_successful(response)
+    return json.loads(response.content)
+
 
 # 改变任务步骤的参数
 def change_task_step_args(task_id, step_name, step_args):
