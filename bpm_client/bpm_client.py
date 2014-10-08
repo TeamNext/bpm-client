@@ -22,7 +22,7 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.3.2'
+__version__ = '1.3.3'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -331,11 +331,11 @@ def revoke_task(task_id):
 
 
 # 重试任务
-def retry_task(task_id, *exec_args, **exec_kwargs):
+def retry_task(xy_task_id, *exec_args, **exec_kwargs):
     url = make_url_absolute('/v1/search/')
     args = {
         'searching_type': 'task',
-        'id_eq': task_id
+        'id_eq': xy_task_id
     }
     response = requests.post(url, data=args)
     assert_http_call_is_successful(response)
@@ -352,11 +352,11 @@ def retry_task(task_id, *exec_args, **exec_kwargs):
 
 
 # 强制完成失败的任务
-def complete_failed_task(task_id, data, ex_data, return_code, exec_args=None, exec_kwargs=None):
+def complete_failed_task(xy_task_id, data, ex_data, return_code, exec_args=None, exec_kwargs=None):
     url = make_url_absolute('/v1/search/')
     args = {
         'searching_type': 'task',
-        'id_eq': task_id
+        'id_eq': xy_task_id
     }
     response = requests.post(url, data=args)
     assert_http_call_is_successful(response)
