@@ -4,6 +4,7 @@ import json
 import httplib
 import logging
 import datetime
+import time
 
 import requests
 import requests.packages.urllib3.util
@@ -22,7 +23,7 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.3.3'
+__version__ = '1.3.4'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
@@ -537,8 +538,8 @@ def get_tasks_by_schedule(schedule_id, datetime_created_ge, datetime_created_lt)
     args = {
         'searching_type': 'tasks-by-schedule',
         'schedule_id': schedule_id,
-        'datetime_created_ge': datetime_created_ge.strftime('%s.%f'),
-        'datetime_created_lt': datetime_created_lt.strftime('%s.%f'),
+        'datetime_created_ge': time.mktime(datetime_created_ge.timetuple()),
+        'datetime_created_lt': time.mktime(datetime_created_lt.timetuple()),
     }
     response = requests.post(url, args)
     assert_http_call_is_successful(response)
