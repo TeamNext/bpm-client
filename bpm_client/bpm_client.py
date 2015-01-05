@@ -11,6 +11,7 @@ import requests.packages.urllib3.util
 import uuid
 try:
     from django.conf import settings
+    settings.DEBUG = False
     if settings.RUN_MODE == 'PRODUCT':
         BPM_URL = 'http://xy.ied.com'
     else:
@@ -23,13 +24,13 @@ except:
     BPM_URL = None
     BPM_SERVICE_URL = None
 
-__version__ = '1.3.4'
+__version__ = '1.3.5'
 
 __all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'change_task_step_args',
            'create_task_schedule', 'list_task_schedules', 'get_task_schedule', 'delete_task_schedule', 
-           'get_tasks_by_schedule', 'get_task_context']
+           'get_tasks_by_schedule', 'get_task_context', 'complete_failed_task', 'failure_task']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -350,6 +351,27 @@ def retry_task(xy_task_id, *exec_args, **exec_kwargs):
     response = http_call(url, data=body)
     assert_http_call_is_successful(response)
     return json.loads(response.content)
+
+
+# 任务强制失败   
+def failure_task(xy_task_id):
+    url = make_url_absolute('/v1/search/')
+    args = {
+        'searching_type': 'task',
+        'id_eq': xy_task_id
+    }
+    response = requests.post(url, data=args)
+    assert_http_call_is_successful(response)
+    form_failure = json.loads(response.content)['form_failure']
+    http_call = getattr(requests, form_failure['method'].lower())
+    body = form_failure['body']
+    body['exec_args'] = exec_args
+    body['exec_kwargs'] = exec_kwargs
+    body = {k: json.dumps(v) for k, v in body.items()}
+    url = make_url_absolute(form_failure['action'])
+    response = http_call(url, data=body)
+    assert_http_call_is_successful(response)
+    return response.content
 
 
 # 强制完成失败的任务
