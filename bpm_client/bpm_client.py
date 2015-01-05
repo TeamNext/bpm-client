@@ -11,7 +11,6 @@ import requests.packages.urllib3.util
 import uuid
 try:
     from django.conf import settings
-    settings.DEBUG = False
     if settings.RUN_MODE == 'PRODUCT':
         BPM_URL = 'http://xy.ied.com'
     else:
