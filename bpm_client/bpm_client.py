@@ -15,20 +15,23 @@ try:
         BPM_URL = 'http://xy.ied.com'
     else:
         BPM_URL = 'http://stage.xy.ied.com'
-    # BPM_URL = getattr(settings, 'BPM_URL', 'http://stage.xy.ied.com')
+    # BPM_SERVICE_URL = BPM_URL + '/service'
     BPM_SERVICE_URL = BPM_URL + '/service'
 except:
-    if '__main__' != __name__:
-        raise
-    BPM_URL = None
-    BPM_SERVICE_URL = None
+    # if '__main__' != __name__:
+    #     raise
+    # BPM_URL = None
+    # BPM_SERVICE_URL = None
+    BPM_URL = 'http://stage.xy.ied.com'
+    BPM_SERVICE_URL = BPM_URL + '/service'
 
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 
-__all__ = ['list_tasks', 'start_task', 'create_task', 'get_task_definition_flowchart', 'get_task', 'get_task_trace',
+__all__ = ['list_tasks', 'start_task', 'create_task', 'start_auth_task', 'create_auth_task',
+           'get_task_definition_flowchart', 'get_task', 'get_task_trace',
            'set_task_context', 'suspend_task', 'resume_task', 'revoke_task', 'retry_task', 'get_task_log',
            'callback_task', 'list_task_waiting_event_names', 'list_task_tries', 'change_task_step_args',
-           'create_task_schedule', 'list_task_schedules', 'get_task_schedule', 'delete_task_schedule', 
+           'create_task_schedule', 'list_task_schedules', 'get_task_schedule', 'delete_task_schedule',
            'get_tasks_by_schedule', 'get_task_context', 'complete_failed_task', 'failure_task']
 
 LOGGER = logging.getLogger(__name__)
@@ -53,9 +56,34 @@ def list_tasks(name_eq, date_created_ge=None, date_created_lt=None, context_eq=N
     return json.loads(response.content)
 
 
+# 直接创建并开始一个任务，返回值即为新创建的任务(混合云版)
+# task_info中需要包含app_code, app_secret, auth_token三个参数
+def start_auth_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
+    return create_auth_task(task_definition_name, task_info, *exec_args, **exec_kwargs).start()
+
+
 # 直接创建并开始一个任务，返回值即为新创建的任务
 def start_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
     return create_task(task_definition_name, task_info, *exec_args, **exec_kwargs).start()
+
+
+# 返回一个TaskBuilder对象， 能设置bpm_context然后开始执行(混合云版)
+def create_auth_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
+    app_code = task_info.get('app')
+    app_secret = task_info.get('app_secret')
+    auth_token = task_info.get('auth_token')
+    assert app_code
+    assert app_secret
+    assert auth_token
+    del task_info['app_code']
+    del task_info['app_secret']
+    del task_info['auth_token']
+    return create_task(
+            task_definition_name,
+            task_info,
+            *exec_args,
+            **exec_kwargs
+            ).app_code(app_code).app_secret(app_secret).auth_token(auth_token)
 
 
 # 返回一个TaskBuilder对象， 能设置bpm_context然后开始执行
@@ -65,7 +93,7 @@ def create_task(task_definition_name, task_info, *exec_args, **exec_kwargs):
 
 
 # 用于创建一个task，并设置其context， 然后再开始执行
-# info_data: app, cc_biz_id, operator, operate_type, origin, operators=None, title=None, ticket=None, 
+# info_data: app, cc_biz_id, operator, operate_type, origin, operators=None, title=None, ticket=None,
 class TaskBuilder(object):
     def __init__(self, task_definition_name, task_info, *exec_args, **exec_kwargs):
         self.task_definition_name = task_definition_name
@@ -352,7 +380,7 @@ def retry_task(xy_task_id, *exec_args, **exec_kwargs):
     return json.loads(response.content)
 
 
-# 任务强制失败   
+# 任务强制失败
 def failure_task(xy_task_id):
     url = make_url_absolute('/v1/search/')
     args = {
@@ -464,7 +492,7 @@ def _add_mention(name, task_info, creator, next_time, url):
         #wechat_send
         body = {}
         body['name'] = "bk.smcs.wechat_send"
-        body['kwargs'] = json.dumps({'receivers': task_info.get('operators'), 
+        body['kwargs'] = json.dumps({'receivers': task_info.get('operators'),
                 'message':message})
         body['creator'] = creator
         body['crontab'] = ""
@@ -480,8 +508,8 @@ def _add_mention(name, task_info, creator, next_time, url):
         #mail_send
         body = {}
         body['name'] = "bk.tof.send_mail"
-        body['kwargs'] = json.dumps({'sender': creator, 
-            'receiver': task_info.get('operators'), 
+        body['kwargs'] = json.dumps({'sender': creator,
+            'receiver': task_info.get('operators'),
             'title': message,
             'content': message})
         body['creator'] = creator
